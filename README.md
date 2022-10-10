@@ -1,4 +1,12 @@
-# A scalable, full-stack live quiz framework built with VueJS and NodeJS
+<h4 align="center"> 
+	🚧 cm-quiz-app 🚀
+</h4>
+
+## Projeto
+
+Personalizado para gincana escolar entre equipes de diversas escolas. Um quiz com pontuação em tempo real, questões personalizadas, tema personalizado, um host e multplayers.
+
+## A scalable, full-stack live quiz framework built with VueJS and NodeJS
 
 This repository contains a scalable framework for building a real-time quiz app, which can double up as a test-taking app in an e-learning scenario or be used for a Pub Quiz Friday with your work mates.
 
