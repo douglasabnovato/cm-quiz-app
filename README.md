@@ -6,7 +6,11 @@
 
 Personalizado para gincana escolar entre equipes de diversas escolas. Um quiz com pontuação em tempo real, questões personalizadas, tema personalizado, um host e multplayers.
 
-## A scalable, full-stack live quiz framework built with VueJS and NodeJS
+## Infraestrutura do projeto
+
+A seguir, os detalhes do servidor e de como acontece o fluxo da aplicação. Utilizado essa estrutura para então personalizar o frontend e as questões conforme a necessidade.
+
+### A scalable, full-stack live quiz framework built with VueJS and NodeJS
 
 This repository contains a scalable framework for building a real-time quiz app, which can double up as a test-taking app in an e-learning scenario or be used for a Pub Quiz Friday with your work mates.
 
