@@ -1,14 +1,44 @@
-<h4 align="center"> 
-	🚧 cm-quiz-app 🚀
-</h4>
+<h4 align="center">cm-quiz-app</h4>
 
 ## Projeto
 
-Personalizado para gincana escolar entre equipes de diversas escolas. Um quiz com pontuação em tempo real, questões personalizadas, tema personalizado, um host e multplayers.
+Quiz em tempo real para gincana escolar entre equipes. Um host cria a sala (perguntas padrão ou de uma planilha Google), compartilha o link e controla o ritmo; as equipes respondem pelo celular e o placar é atualizado ao vivo.
 
-## Infraestrutura do projeto
+Baseado no framework open source *realtime-quiz-framework* (Srushtika/Ably, Apache-2.0).
 
-A seguir, os detalhes do servidor e de como acontece o fluxo da aplicação. Utilizado essa estrutura para então personalizar o frontend e as questões conforme a necessidade.
+## Como rodar
+
+Requer Node 20 ou superior e uma conta gratuita na [Ably](https://ably.com).
+
+```sh
+npm install
+cp .env.example .env        # preencha ABLY_API_KEY
+npm run build:front         # gera realtime-quiz/dist
+npm start                   # http://localhost:8082
+npm test                    # 5 testes (node:test)
+```
+
+## Regras do jogo
+
+- 5 pontos por acerto; cada jogador responde uma vez por pergunta, só enquanto ela está aberta.
+- Somente o host da sala inicia, avança e encerra o quiz.
+- Depois do início, a sala fecha para novas entradas.
+
+## Documentação
+
+- [docs/ANALISE.md](docs/ANALISE.md) — requisitos, defeitos e nota
+- [docs/ARQUITETURA.md](docs/ARQUITETURA.md) — C4, contratos e ADRs
+- [docs/PLANO-DE-ACAO.md](docs/PLANO-DE-ACAO.md) — prioridades
+
+## Deploy gratuito
+
+**Demonstração:** https://cm-quiz-app.onrender.com
+
+Render (Web Service gratuito), configurado em `render.yaml`: build `npm ci --omit=dev`, start `npm start`, health check em `/health` e a variável `ABLY_API_KEY` informada no painel. O front Vue 2 é servido já buildado de `realtime-quiz/dist` (o `vue-cli` 4 não compila em Node 17+ sem ajustes; a migração para Vue 3 + Vite está no próximo ciclo). Passo a passo completo: [docs/DEPLOY.md](docs/DEPLOY.md).
+
+---
+
+## Documentação original (em inglês)
 
 ### A scalable, full-stack live quiz framework built with VueJS and NodeJS
 

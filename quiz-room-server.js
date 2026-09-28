@@ -1,241 +1,171 @@
-const randomQuestions = require('./quiz-default-questions');
+/*
+ * quiz-room-server.js · worker thread de uma sala: recebe jogadores pelo presence do Ably, publica perguntas
+ * e cronômetros, pontua pelo quiz-engine (uma resposta por jogador por pergunta) e publica o ranking.
+ */
 const { parentPort, workerData } = require('worker_threads');
 const Ably = require('ably/promises');
+const defaultQuestions = require('./quiz-default-questions');
+const { createScoreboard, normalizeCustomQuestion } = require('./lib/quiz-engine');
+require('dotenv').config();
+
 const START_TIMER_SEC = 5;
 const QUESTION_TIMER_SEC = 30;
 
-const ABLY_API_KEY = process.env.ABLY_API_KEY;
-const globalPlayersState = {};
-const playerChannels = {};
-let didQuizStart = false;
-let totalPlayers = 0;
-const quizRoomChName = `${workerData.hostRoomCode}:primary`;
-const hostAdminChName = `${workerData.hostRoomCode}:host`;
-let hostAdminCh;
 const roomCode = workerData.hostRoomCode;
 const hostClientId = workerData.hostClientId;
-let quizRoomChannel;
-let numPlayersAnswered = 0;
+const scoreboard = createScoreboard();
+const playerChannels = {};
+let questions = defaultQuestions;
 let customQuestions = [];
+let didQuizStart = false;
 let skipTimer = false;
+let quizRoomChannel;
+let hostAdminCh;
 
-console.log('this is the worker thread');
-console.log('room code is' + workerData.hostRoomCode);
-
-let questions = [];
-
-const realtime = new Ably.Realtime({
-  key: ABLY_API_KEY,
-  echoMessages: false
-});
+const realtime = new Ably.Realtime({ key: process.env.ABLY_API_KEY, echoMessages: false });
 
 realtime.connection.once('connected', () => {
-  hostAdminCh = realtime.channels.get(hostAdminChName);
-  quizRoomChannel = realtime.channels.get(quizRoomChName);
-
+  hostAdminCh = realtime.channels.get(`${roomCode}:host`);
+  quizRoomChannel = realtime.channels.get(`${roomCode}:primary`);
   subscribeToHostEvents();
-
   quizRoomChannel.presence.subscribe('enter', handleNewPlayerEntered);
   quizRoomChannel.presence.subscribe('leave', handleExistingPlayerLeft);
   quizRoomChannel.publish('thread-ready', { start: true });
 });
 
-function handleNewPlayerEntered(player) {
-  console.log(player.clientId + 'player entered quiz room');
-  const newPlayerId = player.clientId;
-  totalPlayers++;
-  parentPort.postMessage({
-    roomCode: roomCode,
-    totalPlayers: totalPlayers,
-    didQuizStart: didQuizStart
-  });
-
-  let newPlayerState = {
-    id: newPlayerId,
-    nickname: player.data.nickname,
-    avatarColor: player.data.avatarColor,
-    isHost: player.data.isHost,
-    score: 0
-  };
-
-  if (player.data.isHost) {
-    let quizType = player.data.quizType;
-    quizType === 'CustomQuiz'
-      ? (questions = customQuestions)
-      : (questions = randomQuestions);
-  } else {
-    playerChannels[newPlayerId] = realtime.channels.get(
-      `${roomCode}:player-ch-${player.clientId}`
-    );
-
-    subscribeToPlayerChannel(playerChannels[newPlayerId], newPlayerId);
-  }
-
-  globalPlayersState[newPlayerId] = newPlayerState;
-  quizRoomChannel.publish('new-player', {
-    newPlayerState
-  });
+/* Informa o processo principal sobre a sala. */
+function reportRoom() {
+  parentPort.postMessage({ roomCode, totalPlayers: scoreboard.playingCount, didQuizStart });
 }
 
+/* Novo jogador ou o host entrou na sala. */
+function handleNewPlayerEntered(player) {
+  const data = player.data || {};
+  const isHost = player.clientId === hostClientId;
+  if (!isHost && didQuizStart) return;
+  const newPlayerState = scoreboard.addPlayer(player.clientId, { nickname: data.nickname, avatarColor: data.avatarColor, isHost });
+  if (isHost) {
+    questions = data.quizType === 'CustomQuiz' && customQuestions.length > 0 ? customQuestions : defaultQuestions;
+  } else {
+    playerChannels[player.clientId] = realtime.channels.get(`${roomCode}:player-ch-${player.clientId}`);
+    subscribeToPlayerChannel(playerChannels[player.clientId], player.clientId);
+  }
+  reportRoom();
+  quizRoomChannel.publish('new-player', { newPlayerState });
+}
+
+/* Jogador saiu; se foi o host, a sala termina. */
 function handleExistingPlayerLeft(player) {
-  console.log('leaving player', player.clientId);
-  const leavingPlayerId = player.clientId;
-  totalPlayers--;
-  parentPort.postMessage({
-    roomCode: roomCode,
-    totalPlayers: totalPlayers
-  });
-  delete globalPlayersState[leavingPlayerId];
-  if (leavingPlayerId === hostClientId) {
-    quizRoomChannel.publish('host-left', {
-      endQuiz: true
-    });
+  scoreboard.removePlayer(player.clientId);
+  if (playerChannels[player.clientId]) {
+    playerChannels[player.clientId].detach();
+    delete playerChannels[player.clientId];
+  }
+  reportRoom();
+  if (player.clientId === hostClientId) {
+    quizRoomChannel.publish('host-left', { endQuiz: true });
     forceQuizEnd();
   }
 }
 
+/* Publica a contagem regressiva segundo a segundo. */
 async function publishTimer(event, countDownSec) {
   while (countDownSec > 0) {
-    quizRoomChannel.publish(event, {
-      countDownSec: countDownSec
-    });
+    quizRoomChannel.publish(event, { countDownSec });
     await new Promise((resolve) => setTimeout(resolve, 1000));
     countDownSec -= 1;
     if (event === 'question-timer' && skipTimer) break;
   }
 }
 
+/* Comandos que só o host envia. */
 function subscribeToHostEvents() {
-  hostAdminCh.subscribe('start-quiz', async () => {
+  hostAdminCh.subscribe('start-quiz', async (msg) => {
+    if (msg.clientId && msg.clientId !== hostClientId) return;
+    if (didQuizStart) return;
     didQuizStart = true;
-    parentPort.postMessage({
-      roomCode,
-      didQuizStart
-    });
+    reportRoom();
     await publishTimer('start-quiz-timer', START_TIMER_SEC);
-    publishQuestion(0, false);
+    publishQuestion(0, questions.length === 1);
   });
 
   hostAdminCh.subscribe('quiz-questions', (msg) => {
-    for (let i = 0; i < msg.data.questions.length; i++) {
-      let item = msg.data.questions[i];
-      let newQuestionObject = {
-        questionNumber: parseInt(item['question number']),
-        showImg: item['image link'].substr(0, 4) === 'http' ? true : false,
-        question: item.question,
-        choices: [
-          item['option 1'],
-          item['option 2'],
-          item['option 3'],
-          item['option 4']
-        ],
-        correct: parseInt(item['correct answer option number']) - 1,
-        pic: item['image link']
-      };
-      customQuestions.push(newQuestionObject);
-    }
+    if (msg.clientId && msg.clientId !== hostClientId) return;
+    const rows = (msg.data && Array.isArray(msg.data.questions)) ? msg.data.questions : [];
+    customQuestions = rows.map(normalizeCustomQuestion).filter(Boolean);
   });
 
   hostAdminCh.subscribe('next-question', (msg) => {
-    let prevQIndex = msg.data.prevQIndex;
-    let newQIndex = prevQIndex + 1;
-    let lastQIndex = questions.length - 1;
-    if (newQIndex < lastQIndex) {
-      publishQuestion(newQIndex, false);
-    } else if (newQIndex === lastQIndex) {
-      publishQuestion(newQIndex, true);
+    if (msg.clientId && msg.clientId !== hostClientId) return;
+    const newQIndex = Number(msg.data && msg.data.prevQIndex) + 1;
+    const lastQIndex = questions.length - 1;
+    if (Number.isInteger(newQIndex) && newQIndex >= 0 && newQIndex <= lastQIndex) {
+      publishQuestion(newQIndex, newQIndex === lastQIndex);
     }
   });
 
-  hostAdminCh.subscribe('end-quiz-now', () => {
+  hostAdminCh.subscribe('end-quiz-now', (msg) => {
+    if (msg.clientId && msg.clientId !== hostClientId) return;
     forceQuizEnd();
   });
 }
 
+/* Encerra a sala avisando os jogadores. */
 function forceQuizEnd() {
-  quizRoomChannel.publish('quiz-ending', {
-    quizEnding: true
-  });
+  quizRoomChannel.publish('quiz-ending', { quizEnding: true });
   killWorkerThread();
 }
 
+/* Publica a pergunta, abre respostas, espera o tempo, revela a correta e o ranking. */
 async function publishQuestion(qIndex, isLast) {
-  numPlayersAnswered = 0;
+  const current = questions[qIndex];
+  if (!current) return;
+  scoreboard.openQuestion(qIndex);
   await quizRoomChannel.publish('new-question', {
     numAnswered: 0,
-    numPlaying: totalPlayers - 1,
+    numPlaying: scoreboard.playingCount,
     questionNumber: qIndex + 1,
-    question: questions[qIndex].question,
-    choices: questions[qIndex].choices,
+    question: current.question,
+    choices: current.choices,
     isLastQuestion: isLast,
-    showImg: questions[qIndex].showImg,
-    imgLink: questions[qIndex].pic
+    showImg: current.showImg,
+    imgLink: current.pic,
   });
   skipTimer = false;
   await publishTimer('question-timer', QUESTION_TIMER_SEC);
-  await quizRoomChannel.publish('correct-answer', {
-    questionNumber: qIndex + 1,
-    correctAnswerIndex: questions[qIndex].correct
-  });
-  computeTopScorers();
-
-  if (isLast) {
-    killWorkerThread();
-  }
+  scoreboard.closeQuestion();
+  await quizRoomChannel.publish('correct-answer', { questionNumber: qIndex + 1, correctAnswerIndex: current.correct });
+  quizRoomChannel.publish('full-leaderboard', { leaderboard: scoreboard.leaderboard() });
+  if (isLast) killWorkerThread();
 }
 
-function computeTopScorers() {
-  let leaderboard = new Array();
-  for (let item in globalPlayersState) {
-    if (item != hostClientId) {
-      leaderboard.push({
-        nickname: globalPlayersState[item].nickname,
-        score: globalPlayersState[item].score
-      });
-    }
-  }
-  leaderboard.sort((a, b) => b.score - a.score);
-  quizRoomChannel.publish('full-leaderboard', {
-    leaderboard: leaderboard
-  });
-}
-
+/* Recebe as respostas do jogador pelo canal exclusivo dele. */
 function subscribeToPlayerChannel(playerChannel, playerId) {
   playerChannel.subscribe('player-answer', (msg) => {
-    numPlayersAnswered++;
-    if (
-      questions[msg.data.questionIndex].correct === msg.data.playerAnswerIndex
-    ) {
-      globalPlayersState[playerId].score += 5;
-    }
-    updateLiveStatsForHost(numPlayersAnswered, totalPlayers - 1);
+    const data = msg.data || {};
+    const question = questions[data.questionIndex];
+    if (!question) return;
+    const accepted = scoreboard.registerAnswer(playerId, data.questionIndex, data.playerAnswerIndex, question.correct);
+    if (accepted) updateLiveStatsForHost();
   });
-  updateLiveStatsForHost(numPlayersAnswered, totalPlayers - 1);
+  updateLiveStatsForHost();
 }
 
-function updateLiveStatsForHost(numAnswered, numPlaying) {
-  quizRoomChannel.publish('live-stats-update', {
-    numAnswered: numAnswered,
-    numPlaying: numPlaying
-  });
-  if (numAnswered === numPlaying) {
-    skipTimer = true;
-  }
+/* Atualiza o contador de respostas e encerra o tempo quando todos responderam. */
+function updateLiveStatsForHost() {
+  const numAnswered = scoreboard.answeredCount;
+  const numPlaying = scoreboard.playingCount;
+  quizRoomChannel.publish('live-stats-update', { numAnswered, numPlaying });
+  if (numPlaying > 0 && numAnswered >= numPlaying) skipTimer = true;
 }
 
+/* Solta os canais, avisa o processo principal e encerra a thread. */
 function killWorkerThread() {
-  console.log('killing thread');
-  for (const item in playerChannels) {
-    if (playerChannels[item]) {
-      playerChannels[item].detach();
-    }
-  }
-  hostAdminCh.detach();
-  quizRoomChannel.detach();
-  parentPort.postMessage({
-    killWorker: true,
-    roomCode: roomCode,
-    totalPlayers: totalPlayers
-  });
+  Object.values(playerChannels).forEach((channel) => channel.detach());
+  if (hostAdminCh) hostAdminCh.detach();
+  if (quizRoomChannel) quizRoomChannel.detach();
+  parentPort.postMessage({ killWorker: true, roomCode, totalPlayers: scoreboard.playingCount });
+  realtime.close();
   process.exit(0);
 }
+/* fim de quiz-room-server.js */

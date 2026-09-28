@@ -1,0 +1,18 @@
+# Blueprint do Render: serviço web Node gratuito que entrega o front Vue já buildado
+# (realtime-quiz/dist) e emite os tokens do Ably. A chave ABLY_API_KEY é pedida no painel.
+services:
+  - type: web
+    name: cm-quiz-app
+    runtime: node
+    plan: free
+    branch: main
+    autoDeployTrigger: commit
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: ABLY_API_KEY
+        sync: false
+# fim de render.yaml

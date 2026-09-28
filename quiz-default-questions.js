@@ -1,10 +1,14 @@
+/*
+ * quiz-default-questions.js · perguntas padrão do quiz do Colégio Militar.
+ * "correct" é o ÍNDICE (0 a 3) da alternativa correta em "choices" — o motor compara com o índice clicado.
+ */
 module.exports = [
   {
     questionNumber: 1,
     question: 'Quando nasceu o primeiro colégio militar?',
     choices: ['09 de março de 1889', '09 de maio de 1890', '10 de março de 1889', '09 de abril de 1889'],
     showImg: true,
-    correct: 1,
+    correct: 0,
     pic: 'https://media.giphy.com/media/2AX09OcYVEsUM/giphy.gif'
   },
   {
@@ -13,7 +17,7 @@ module.exports = [
       "Qual é o primeiro nome do primeiro colégio militar?",
     choices: ['Imperial Colégio Militar da Coroa', 'Imperial Colégio Militar da Corte', 'Imperial Escola Militar da Corte', 'Escola Militar do Império'],
     showImg: true,
-    correct: 2,
+    correct: 1,
     pic: 'https://media.giphy.com/media/7lz6nPd56aHh6/giphy.gif'
   },
   {
@@ -22,7 +26,7 @@ module.exports = [
       'Qual o tamanho do colégio militar de Brasília?',
     choices: ['20.000 metros quadrados', '260.000 metros quadrados', '240.000 metros quadrados', '220.000 metros quadrados'],
     showImg: true,
-    correct: 3,
+    correct: 2,
     pic: 'https://media.giphy.com/media/4GZyVJkdSHTImp74RP/giphy.gif'
   },
   {
@@ -36,7 +40,8 @@ module.exports = [
       '132 salas de aula'
     ],
     showImg: true,
-    correct: 2,
+    correct: 1,
     pic: 'https://media.giphy.com/media/q6gzszRDonw3u/giphy.gif'
   }
 ];
+/* fim de quiz-default-questions.js */
