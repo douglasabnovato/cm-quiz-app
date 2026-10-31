@@ -1,4 +1,4 @@
-> **Projeto de estudo.** Estado conferido em 30/10/2026: 1 endereço(s) citado(s) abaixo não responde(m). Detalhes em [docs/AVALIACAO.md](docs/AVALIACAO.md) e próximos passos em [docs/PLANO-ESTRATEGICO.md](docs/PLANO-ESTRATEGICO.md).
+> **Projeto de estudo.** Estado conferido em 31/10/2026: os endereços que seguem fora do ar foram retirados deste README. Detalhes em [docs/AVALIACAO.md](docs/AVALIACAO.md) e próximos passos em [docs/PLANO-ESTRATEGICO.md](docs/PLANO-ESTRATEGICO.md).
 
 <h4 align="center">cm-quiz-app</h4>
 
@@ -34,7 +34,7 @@ npm test                    # 5 testes (node:test)
 
 ## Deploy gratuito
 
-**Demonstração:** https://cm-quiz-app.onrender.com
+**Demonstração:** Fora do ar desde a conferência de 31/10/2026; para ver o projeto, rode localmente (seção "Como rodar").
 
 Render (Web Service gratuito), configurado em `render.yaml`: build `npm ci --omit=dev`, start `npm start`, health check em `/health` e a variável `ABLY_API_KEY` informada no painel. O front Vue 2 é servido já buildado de `realtime-quiz/dist` (o `vue-cli` 4 não compila em Node 17+ sem ajustes; a migração para Vue 3 + Vite está no próximo ciclo). Passo a passo completo: [docs/DEPLOY.md](docs/DEPLOY.md).
 
