@@ -24,7 +24,7 @@ Requer Node 20 ou superior e uma conta gratuita na [Ably](https://ably.com).
 ```sh
 npm install
 cp .env.example .env        # preencha ABLY_API_KEY
-npm run build:front         # gera realtime-quiz/dist
+npm run build:front         # gera realtime-quiz/dist (Vue CLI 4 com --openssl-legacy-provider)
 npm start                   # http://localhost:8082
 npm test                    # 5 testes (node:test)
 ```
