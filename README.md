@@ -2,6 +2,15 @@
 
 <h4 align="center">cm-quiz-app</h4>
 
+## 🧠 O que aprendi
+
+> Proposta de 01/11/2026, escrita a partir do código e das dependências. Ajuste com a sua experiência.
+
+- Sincronizar um jogo em tempo real com Ably.
+- Separar o servidor Express, que entrega os arquivos e emite tokens, do front em Vue.
+- Manter a chave do serviço fora do código, com variáveis de ambiente.
+- Testar regras do jogo com `node --test`.
+
 ## Projeto
 
 Quiz em tempo real para gincana escolar entre equipes. Um host cria a sala (perguntas padrão ou de uma planilha Google), compartilha o link e controla o ritmo; as equipes respondem pelo celular e o placar é atualizado ao vivo.
