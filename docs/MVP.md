@@ -14,7 +14,7 @@
 | 6 | Falhas tratadas | Erro, vazio e carregamento têm resposta clara | Não atende: Não exercitado: sem chave do Ably não há sessão ao vivo. |
 | 7 | Desempenho aceitável | LCP de até 2,5 s no celular | Não medido: Sem publicação verificada neste ciclo. |
 | 8 | Acessibilidade básica | axe e teclado | Atende: Depois da correção, axe sem violações; foco visível; sem rolagem em 375 px. |
-| 9 | Segurança e conformidade | Riscos decididos | Parcial: Servidor sem alertas; `realtime-quiz` com Vue CLI 4 mantém alertas de build e dependências antigas. |
+| 9 | Segurança e conformidade | Riscos decididos | Parcial: o front saiu do Vue CLI 4 para Vite, sem alertas críticos ou altos; resta 1 alerta baixo do Vue 2. |
 | 10 | Entrega confiável | CI verde antes de entrar na principal | Atende: CI verde no PR deste ciclo; a principal segue sem proteção. |
 | 11 | Testes dos fluxos críticos | Testes automatizados no CI | Atende: Testes automatizados rodam no CI. |
 | 12 | Documentação honesta | O README ensina a rodar | Atende: Comandos conferidos com o `package.json`; aviso de estudo no README. |
