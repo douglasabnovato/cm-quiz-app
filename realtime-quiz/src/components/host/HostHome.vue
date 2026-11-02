@@ -7,7 +7,7 @@
         </a>
       </div>
       <div class="card-body home-text">
-        <h5 class="card-title">Bem vindo ao 5º Desafio Global do Conhecimento!!</h5>
+        <h1 class="card-title h5">Bem vindo ao 5º Desafio Global do Conhecimento!!</h1>
         <p class="card-text">
           Vamos criar nosso quiz do 5º Desafio Mundial do Conhecimento.
           Teremos um host para acompanhar as questões e estatísticas das equipes participantes.
