@@ -162,7 +162,7 @@ import OnlinePlayers from '../common/OnlinePlayers.vue';
 import AdminPanel from './AdminPanel.vue';
 import LiveStats from '../common/LiveStats.vue';
 import Leaderboard from '../common/Leaderboard.vue';
-import * as GSheetReader from 'g-sheets-api';
+import GSheetReader from 'g-sheets-api';
 
 export default {
   name: 'QuizType',
