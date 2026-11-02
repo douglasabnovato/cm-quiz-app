@@ -1,7 +1,7 @@
 <template>
-  <div id="app">
+  <main id="app">
     <router-view :realtime="realtime"></router-view>
-  </div>
+  </main>
 </template>
 
 <script>
