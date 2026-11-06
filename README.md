@@ -11,6 +11,28 @@
 - Manter a chave do serviço fora do código, com variáveis de ambiente.
 - Testar regras do jogo com `node --test`.
 
+## Estado e próximos passos (ciclo de 03/11/2026)
+
+**O que foi feito** (06/11/2026, PRs #20 e #21)
+- O servidor sobe sem `ABLY_API_KEY`: as telas abrem e o front avisa que o jogo ao vivo está desligado.
+- Avisos de conexão perdida, suspensa ou com falha, com botão "Tentar de novo".
+- 10 testes (antes, 5), incluindo o modo sem chave e os avisos.
+- CI também nos PRs para `developer/**`.
+- README corrigido (o front usa Vite, não Vue CLI 4) e cópia sem uso de perguntas removida.
+- `docs/MVP.md` revisto pela régua de estudo: 7 de 10 critérios aplicáveis.
+
+**O que queremos fazer**
+- [#17](https://github.com/douglasabnovato/cm-quiz-app/issues/17) Restringir o token do Ably aos canais da sala.
+- [#18](https://github.com/douglasabnovato/cm-quiz-app/issues/18) Migrar o front para Vue 3.
+- [#19](https://github.com/douglasabnovato/cm-quiz-app/issues/19) Teste de interface das telas sem tempo real.
+- [#14](https://github.com/douglasabnovato/cm-quiz-app/issues/14) Chave do Ably para demonstrar o jogo (responsável).
+- [#15](https://github.com/douglasabnovato/cm-quiz-app/issues/15) Proteger a `main` (responsável).
+- [#16](https://github.com/douglasabnovato/cm-quiz-app/issues/16) Decidir a publicação: o link do Render deu 404 em 06/11 (responsável).
+
+**Onde está a documentação**
+- [docs/MVP.md](docs/MVP.md): critérios e estado.
+- [docs/PLANO-DE-ACAO.md](docs/PLANO-DE-ACAO.md): seção "Ciclo de 03/11/2026", com pesquisa, backlog e engenharia.
+
 ## Projeto
 
 Quiz em tempo real para gincana escolar entre equipes. Um host cria a sala (perguntas padrão ou de uma planilha Google), compartilha o link e controla o ritmo; as equipes respondem pelo celular e o placar é atualizado ao vivo.
@@ -23,10 +45,10 @@ Requer Node 20 ou superior e uma conta gratuita na [Ably](https://ably.com).
 
 ```sh
 npm install
-cp .env.example .env        # preencha ABLY_API_KEY
-npm run build:front         # gera realtime-quiz/dist (Vue CLI 4 com --openssl-legacy-provider)
+cp .env.example .env        # preencha ABLY_API_KEY (sem ela, só as telas abrem)
+npm run build:front         # gera realtime-quiz/dist (Vite)
 npm start                   # http://localhost:8082
-npm test                    # 5 testes (node:test)
+npm test                    # 10 testes (node:test)
 ```
 
 ## Regras do jogo
@@ -45,7 +67,7 @@ npm test                    # 5 testes (node:test)
 
 **Demonstração:** Fora do ar desde a conferência de 31/10/2026; para ver o projeto, rode localmente (seção "Como rodar").
 
-Render (Web Service gratuito), configurado em `render.yaml`: build `npm ci --omit=dev`, start `npm start`, health check em `/health` e a variável `ABLY_API_KEY` informada no painel. O front Vue 2 é servido já buildado de `realtime-quiz/dist` (o `vue-cli` 4 não compila em Node 17+ sem ajustes; a migração para Vue 3 + Vite está no próximo ciclo). Passo a passo completo: [docs/DEPLOY.md](docs/DEPLOY.md).
+Render (Web Service gratuito), configurado em `render.yaml`: build `npm ci --omit=dev`, start `npm start`, health check em `/health` e a variável `ABLY_API_KEY` informada no painel. O front Vue 2 é servido já buildado de `realtime-quiz/dist`, gerado com Vite desde 02/11/2026; a migração para Vue 3 está na #18. Sem `ABLY_API_KEY`, o servidor sobe só com as telas e avisa que o jogo ao vivo está desligado. Passo a passo completo: [docs/DEPLOY.md](docs/DEPLOY.md).
 
 ---
 
