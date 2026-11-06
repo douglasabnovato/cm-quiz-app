@@ -92,4 +92,14 @@ test('rotas: status da sala, token do Ably e erro do Ably tratado', async () => 
   assert.equal((await get(failing, '/auth')).status, 502);
   assert.equal(JSON.parse((await get(app, '/health')).body).rooms, 1);
 });
+
+test('sem chave do Ably: telas no ar, /auth responde 503 com mensagem e /health avisa', async () => {
+  const app = createApp({ realtime: null, registry: createRoomRegistry() });
+  const auth = await get(app, '/auth');
+  assert.equal(auth.status, 503);
+  assert.match(JSON.parse(auth.body).error, /ABLY_API_KEY/);
+  const health = JSON.parse((await get(app, '/health')).body);
+  assert.equal(health.realtime, false);
+  assert.equal((await get(app, '/')).status, 200);
+});
 /* fim de quiz.test.js */

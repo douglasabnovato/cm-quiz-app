@@ -47,7 +47,7 @@ Publicar um quiz ao vivo (Node + worker threads + Ably + front Vue 2) sem custo,
 3. `npm ci`
 4. `npm test` (5 testes)
 5. `npm start` e abrir http://localhost:8082
-6. `git rm "quiz-default-questions copy.js"` (cópia em inglês sem uso)
+6. `quiz-default-questions copy.js`: removido em 06/11/2026.
 7. `git status` (o `.env` não pode aparecer)
 8. `git add -A`
 9. `git commit -m "fix: gabarito 0-based, 1 resposta por jogador, comandos só do host, dependências sem vulnerabilidades e deploy no Render"`

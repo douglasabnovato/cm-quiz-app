@@ -21,9 +21,12 @@ function createApp({ realtime, registry }) {
   const app = express();
   app.disable('x-powered-by');
 
-  app.get('/health', (req, res) => res.json({ status: 'ok', ...registry.stats() }));
+  app.get('/health', (req, res) => res.json({ status: 'ok', realtime: Boolean(realtime), ...registry.stats() }));
 
   app.get('/auth', (req, res) => {
+    if (!realtime) {
+      return res.status(503).json({ error: 'Tempo real desligado: o servidor está sem ABLY_API_KEY.' });
+    }
     const tokenParams = { clientId: `id-${crypto.randomUUID()}`, ttl: 60 * 60 * 1000 };
     realtime.auth.createTokenRequest(tokenParams, (err, tokenRequest) => {
       if (err) {
@@ -61,11 +64,14 @@ function generateNewQuizRoom(registry, hostNickname, hostRoomCode, hostClientId)
 
 /* Inicia o servidor e escuta os hosts que entram no canal global. */
 function main() {
-  if (!ABLY_API_KEY) {
-    console.error('Defina ABLY_API_KEY no arquivo .env (veja .env.example).');
-    process.exit(1);
-  }
   const registry = createRoomRegistry();
+  if (!ABLY_API_KEY) {
+    /* Sem chave, serve só as telas: o front avisa que o tempo real está desligado. */
+    console.warn('ABLY_API_KEY ausente: tempo real desligado (veja .env.example).');
+    const app = createApp({ realtime: null, registry });
+    app.listen(PORT, () => console.log(`Quiz em http://localhost:${PORT} (sem tempo real)`));
+    return;
+  }
   const realtime = new Ably.Realtime({ key: ABLY_API_KEY, echoMessages: false });
   const app = createApp({ realtime, registry });
   app.listen(PORT, () => console.log(`Quiz em http://localhost:${PORT}`));
