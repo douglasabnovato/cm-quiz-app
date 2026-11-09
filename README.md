@@ -11,27 +11,25 @@
 - Manter a chave do serviço fora do código, com variáveis de ambiente.
 - Testar regras do jogo com `node --test`.
 
-## Estado e próximos passos (ciclo de 03/11/2026)
+## Estado e próximos passos (ciclo de 07/11/2026)
 
-**O que foi feito** (06/11/2026, PRs #20 e #21)
-- O servidor sobe sem `ABLY_API_KEY`: as telas abrem e o front avisa que o jogo ao vivo está desligado.
-- Avisos de conexão perdida, suspensa ou com falha, com botão "Tentar de novo".
-- 10 testes (antes, 5), incluindo o modo sem chave e os avisos.
-- CI também nos PRs para `developer/**`.
-- README corrigido (o front usa Vite, não Vue CLI 4) e cópia sem uso de perguntas removida.
-- `docs/MVP.md` revisto pela régua de estudo: 7 de 10 critérios aplicáveis.
+**O que foi feito** (09/11/2026, na sprint `developer/sprint-2026-11-12`; a `main` recebe depois da revisão do responsável)
+- O front passou para Vue 3 e Vue Router 4 (#18). `npm audit --omit=dev` sem alertas.
+- O token de `/auth` só tem as permissões de cada canal do jogo (#17). Detalhes em [docs/ARQUITETURA.md](docs/ARQUITETURA.md).
+- Sem chave do Ably, o aviso aparece de imediato e o navegador não fica pedindo token.
+- Fluxo das telas percorrido no navegador sem chave (registro no `docs/MVP.md`, critério 3).
+- `docs/MVP.md`: 8 de 10 critérios aplicáveis; os 2 parciais dependem do responsável.
 
 **O que queremos fazer**
-- [#17](https://github.com/douglasabnovato/cm-quiz-app/issues/17) Restringir o token do Ably aos canais da sala.
-- [#18](https://github.com/douglasabnovato/cm-quiz-app/issues/18) Migrar o front para Vue 3.
 - [#19](https://github.com/douglasabnovato/cm-quiz-app/issues/19) Teste de interface das telas sem tempo real.
+- Atualizar o Vite, traduzir as telas que seguem em inglês e desligar "Criar" quando o jogo ao vivo estiver desligado (issues do ciclo de 07/11).
 - [#14](https://github.com/douglasabnovato/cm-quiz-app/issues/14) Chave do Ably para demonstrar o jogo (responsável).
 - [#15](https://github.com/douglasabnovato/cm-quiz-app/issues/15) Proteger a `main` (responsável).
-- [#16](https://github.com/douglasabnovato/cm-quiz-app/issues/16) Decidir a publicação: o link do Render deu 404 em 06/11 (responsável).
+- [#16](https://github.com/douglasabnovato/cm-quiz-app/issues/16) Decidir a publicação: o link do Render deu 404 em 09/11 (responsável).
 
 **Onde está a documentação**
 - [docs/MVP.md](docs/MVP.md): critérios e estado.
-- [docs/PLANO-DE-ACAO.md](docs/PLANO-DE-ACAO.md): seção "Ciclo de 03/11/2026", com pesquisa, backlog e engenharia.
+- [docs/PLANO-DE-ACAO.md](docs/PLANO-DE-ACAO.md): seção "Ciclo de 07/11/2026", com pesquisa, backlog e engenharia.
 
 ## Projeto
 
@@ -48,7 +46,7 @@ npm install
 cp .env.example .env        # preencha ABLY_API_KEY (sem ela, só as telas abrem)
 npm run build:front         # gera realtime-quiz/dist (Vite)
 npm start                   # http://localhost:8082
-npm test                    # 10 testes (node:test)
+npm test                    # 11 testes (node:test)
 ```
 
 ## Regras do jogo
@@ -67,7 +65,7 @@ npm test                    # 10 testes (node:test)
 
 **Demonstração:** Fora do ar desde a conferência de 31/10/2026; para ver o projeto, rode localmente (seção "Como rodar").
 
-Render (Web Service gratuito), configurado em `render.yaml`: build `npm ci --omit=dev`, start `npm start`, health check em `/health` e a variável `ABLY_API_KEY` informada no painel. O front Vue 2 é servido já buildado de `realtime-quiz/dist`, gerado com Vite desde 02/11/2026; a migração para Vue 3 está na #18. Sem `ABLY_API_KEY`, o servidor sobe só com as telas e avisa que o jogo ao vivo está desligado. Passo a passo completo: [docs/DEPLOY.md](docs/DEPLOY.md).
+Render (Web Service gratuito), configurado em `render.yaml`: build `npm ci --omit=dev`, start `npm start`, health check em `/health` e a variável `ABLY_API_KEY` informada no painel. O front Vue 3 é servido já buildado de `realtime-quiz/dist`, gerado com Vite (Vue 3 desde 09/11/2026, #18). Sem `ABLY_API_KEY`, o servidor sobe só com as telas e avisa que o jogo ao vivo está desligado. Passo a passo completo: [docs/DEPLOY.md](docs/DEPLOY.md).
 
 ---
 

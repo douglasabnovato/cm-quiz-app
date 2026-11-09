@@ -82,4 +82,4 @@ O navegador recebe um token criado em `/auth` com `capability` mínima (`capabil
 | `<sala>:host` | o host (iniciar, próxima pergunta, encerrar) | `publish` |
 | `<sala>:player-ch-<clientId>` | o próprio jogador | `publish` só no canal do seu `clientId` |
 
-Risco que fica: sem login, qualquer token ainda pode publicar no `<sala>:host` de outra sala se souber o código. Fechar isso exige o servidor emitir token por papel e sala. O jogo com chave real não foi percorrido depois da mudança (#14).
+Risco que fica: sem login, qualquer token pode publicar no `<sala>:host` de outra sala se souber o código. O worker já ignora comandos cujo `clientId` não é o do host (`quiz-room-server.js`), e o Ably fixa o `clientId` no token, então o efeito é só ruído no canal. Fechar de vez exige token por papel e sala. O jogo com chave real não foi percorrido depois da mudança (#14).
