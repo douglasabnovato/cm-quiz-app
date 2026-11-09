@@ -236,10 +236,18 @@ export default {
       this.didHostForceQuizEnd = true;
     },
     setUpMyChannel() {
-      this.myClientId = this.realtime.auth.clientId;
-      this.myInputCh = markRaw(this.realtime.channels.get(
-        `${this.quizRoomCode}:player-ch-${this.myClientId}`
-      ));
+      /* O clientId só existe depois do token; o canal de respostas depende dele (permissão por clientId). */
+      const ligar = () => {
+        this.myClientId = this.realtime.auth.clientId;
+        this.myInputCh = markRaw(this.realtime.channels.get(
+          `${this.quizRoomCode}:player-ch-${this.myClientId}`
+        ));
+      };
+      if (this.realtime.auth.clientId) {
+        ligar();
+      } else {
+        this.realtime.connection.once('connected', ligar);
+      }
     },
     enterRoomWithNickname() {
       this.myQuizRoomCh.presence.enter({

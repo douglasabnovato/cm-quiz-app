@@ -50,7 +50,8 @@ export default {
           }
         })
         .catch(() => {
-          this.aviso = avisoDaConexao('failed', null);
+          /* /health fora do ar ou lento (servidor acordando): conecta mesmo assim e deixa o Ably tentar de novo. */
+          this.realtime.connection.connect();
         });
     },
     reconectar() {

@@ -19,7 +19,7 @@ flowchart LR
 | Front | Vue 3 + Vue Router 4 (build em `realtime-quiz/dist`) | Telas de host e jogador |
 | Servidor principal | Node 20 + Express (`server.js`) | Estático, `/auth`, `/checkRoomStatus`, `/health`, cria *workers* |
 | Worker por sala | `worker_threads` (`quiz-room-server.js`) | Fluxo da sala e pontuação |
-| Mensageria | Ably | Canais `<sala>:primary` e por jogador |
+| Mensageria | Ably | Canais `main-quiz-thread`, `<sala>:primary`, `<sala>:host` e um por jogador |
 
 ### Componentes do servidor
 
@@ -69,7 +69,7 @@ realtime-quiz/            front Vue 3
 
 ## 6. Fora do escopo
 
-Migração para Vue 3/Vite; acessibilidade do front; persistência de resultados; capability Ably por sala; autenticação de host com senha.
+Persistência de resultados; token do Ably por papel e por sala; autenticação de host com senha. (Vue 3 com Vite e permissões por canal saíram desta lista em 09/11/2026.)
 
 ## Canais e permissões do token (07/11/2026)
 
@@ -82,4 +82,7 @@ O navegador recebe um token criado em `/auth` com `capability` mínima (`capabil
 | `<sala>:host` | o host (iniciar, próxima pergunta, encerrar) | `publish` |
 | `<sala>:player-ch-<clientId>` | o próprio jogador | `publish` só no canal do seu `clientId` |
 
-Risco que fica: sem login, qualquer token pode publicar no `<sala>:host` de outra sala se souber o código. O worker já ignora comandos cujo `clientId` não é o do host (`quiz-room-server.js`), e o Ably fixa o `clientId` no token, então o efeito é só ruído no canal. Fechar de vez exige token por papel e sala. O jogo com chave real não foi percorrido depois da mudança (#14).
+Riscos que ficam, porque não há login e todo token tem as mesmas permissões:
+- qualquer token pode publicar no `<sala>:host` de outra sala se souber o código. O worker ignora comandos cujo `clientId` não é o do host (`quiz-room-server.js`), e o Ably fixa o `clientId` no token; o efeito é ruído no canal;
+- qualquer token pode entrar na presença global e criar salas (uma worker por sala no servidor) e entrar na presença de qualquer `<sala>:primary` como jogador, inflando a lista e o placar.
+Fechar isso exige token por papel e sala (issue do ciclo de 07/11). O jogo com chave real não foi percorrido depois da mudança (#14).
