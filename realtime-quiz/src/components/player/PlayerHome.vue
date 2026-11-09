@@ -116,6 +116,7 @@ import LiveStats from '../common/LiveStats.vue';
 import Leaderboard from '../common/Leaderboard.vue';
 
 import axios from 'axios';
+import { markRaw } from 'vue';
 export default {
   name: 'WaitingArea',
   props: ['realtime'],
@@ -131,6 +132,7 @@ export default {
       isRoomClosed: null,
       quizRoomCode: null,
       myQuizRoomCh: null,
+      myInputCh: null,
       headerImgLink:
         'https://user-images.githubusercontent.com/5900152/108396467-c713bc00-720e-11eb-95d8-a5f9e571b153.png',
       myNickname: '',
@@ -234,10 +236,18 @@ export default {
       this.didHostForceQuizEnd = true;
     },
     setUpMyChannel() {
-      this.myClientId = this.realtime.auth.clientId;
-      this.myInputCh = this.realtime.channels.get(
-        `${this.quizRoomCode}:player-ch-${this.myClientId}`
-      );
+      /* O clientId só existe depois do token; o canal de respostas depende dele (permissão por clientId). */
+      const ligar = () => {
+        this.myClientId = this.realtime.auth.clientId;
+        this.myInputCh = markRaw(this.realtime.channels.get(
+          `${this.quizRoomCode}:player-ch-${this.myClientId}`
+        ));
+      };
+      if (this.realtime.auth.clientId) {
+        ligar();
+      } else {
+        this.realtime.connection.once('connected', ligar);
+      }
     },
     enterRoomWithNickname() {
       this.myQuizRoomCh.presence.enter({
@@ -283,16 +293,16 @@ export default {
       .then(roomStatusInfo => {
         this.isRoomClosed = roomStatusInfo.data.isRoomClosed;
       });
-    this.myQuizRoomCh = this.realtime.channels.get(
+    this.myQuizRoomCh = markRaw(this.realtime.channels.get(
       `${this.quizRoomCode}:primary`
-    );
+    ));
     this.myAvatarColor =
       '#' +
       Math.random()
         .toString(16)
         .slice(-6);
   },
-  beforeDestroy() {
+  beforeUnmount() {
     if (this.myQuizRoomCh) {
       this.myQuizRoomCh.presence.leave();
     }

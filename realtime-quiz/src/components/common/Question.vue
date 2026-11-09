@@ -74,6 +74,7 @@ export default {
     'showAnswer',
     'correctAnswer'
   ],
+  emits: ['player-answer'],
   data() {
     return {
       answerSubmitted: false,

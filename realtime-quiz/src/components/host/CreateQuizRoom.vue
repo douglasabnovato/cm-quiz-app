@@ -163,6 +163,7 @@ import AdminPanel from './AdminPanel.vue';
 import LiveStats from '../common/LiveStats.vue';
 import Leaderboard from '../common/Leaderboard.vue';
 import GSheetReader from 'g-sheets-api';
+import { markRaw } from 'vue';
 
 export default {
   name: 'QuizType',
@@ -248,12 +249,12 @@ export default {
       this.enterMainThread();
     },
     waitForGameRoom() {
-      this.myQuizRoomCh = this.realtime.channels.get(
+      this.myQuizRoomCh = markRaw(this.realtime.channels.get(
         `${this.myQuizRoomCode}:primary`
-      );
-      this.hostAdminCh = this.realtime.channels.get(
+      ));
+      this.hostAdminCh = markRaw(this.realtime.channels.get(
         `${this.myQuizRoomCode}:host`
-      );
+      ));
       this.myQuizRoomCh.subscribe('thread-ready', () => {
         this.handleQuizRoomReady();
       });
@@ -280,7 +281,7 @@ export default {
       this.subscribeToRoomChEvents();
     },
     enterMainThread() {
-      this.globalQuizCh = this.realtime.channels.get(this.globalQuizChName);
+      this.globalQuizCh = markRaw(this.realtime.channels.get(this.globalQuizChName));
       this.globalQuizCh.presence.enter({
         nickname: this.hostNickname,
         roomCode: this.myQuizRoomCode
@@ -374,7 +375,7 @@ export default {
       this.showFinalScreen = true;
     }
   },
-  beforeDestroy() {
+  beforeUnmount() {
     if (this.myQuizRoomCh) {
       this.myQuizRoomCh.presence.leave();
     }
