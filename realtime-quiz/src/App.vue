@@ -1,5 +1,5 @@
 <template>
-  <main id="app">
+  <main class="app-quiz">
     <div v-if="aviso" class="aviso-conexao" :role="aviso.grave ? 'alert' : 'status'">
       <p>{{ aviso.texto }}</p>
       <button v-if="aviso.grave" type="button" @click="reconectar">Tentar de novo</button>
@@ -10,6 +10,7 @@
 
 <script>
 import * as Ably from 'ably';
+import { markRaw } from 'vue';
 import { avisoDaConexao } from './conexao.js';
 
 export default {
@@ -23,31 +24,41 @@ export default {
     };
   },
   created() {
-    this.realtime = new Ably.Realtime({
-      authUrl: '/auth'
-    });
+    /* markRaw: o cliente do Ably não pode virar proxy reativo do Vue 3.
+       autoConnect: false: só conecta depois de /health confirmar que o servidor tem a chave. */
+    this.realtime = markRaw(new Ably.Realtime({
+      authUrl: '/auth',
+      autoConnect: false
+    }));
     /* Mostra o estado da conexão: desconectado e suspenso tentam sozinhos; falha pede ação. */
     this.realtime.connection.on((mudanca) => {
       this.aviso = avisoDaConexao(mudanca.current, mudanca.reason, this.semChave);
     });
-    /* O servidor diz em /health se está sem chave; assim o aviso aparece logo, sem esperar as tentativas. */
-    fetch('/health')
-      .then((r) => r.json())
-      .then((saude) => {
-        if (saude.realtime === false) {
-          this.semChave = true;
-          this.aviso = avisoDaConexao('failed', null, true);
-        }
-      })
-      .catch(() => {});
+    this.verificarServidor();
   },
   methods: {
+    /* Pergunta ao servidor se o tempo real está ligado; sem chave, avisa e não tenta conectar. */
+    verificarServidor() {
+      return fetch('/health')
+        .then((r) => r.json())
+        .then((saude) => {
+          this.semChave = saude.realtime === false;
+          if (this.semChave) {
+            this.aviso = avisoDaConexao('failed', null, true);
+          } else {
+            this.realtime.connection.connect();
+          }
+        })
+        .catch(() => {
+          this.aviso = avisoDaConexao('failed', null);
+        });
+    },
     reconectar() {
       this.aviso = null;
-      this.realtime.connection.connect();
+      this.verificarServidor();
     }
   },
-  destroyed() {
+  unmounted() {
     this.realtime.connection.off();
     this.realtime.connection.close();
   }
@@ -55,7 +66,7 @@ export default {
 </script>
 
 <style>
-#app {
+.app-quiz {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
