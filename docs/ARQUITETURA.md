@@ -16,7 +16,7 @@ flowchart LR
 
 | Contêiner | Tecnologia | Responsabilidade |
 |---|---|---|
-| Front | Vue 2 + Vue Router (build em `realtime-quiz/dist`) | Telas de host e jogador |
+| Front | Vue 3 + Vue Router 4 (build em `realtime-quiz/dist`) | Telas de host e jogador |
 | Servidor principal | Node 20 + Express (`server.js`) | Estático, `/auth`, `/checkRoomStatus`, `/health`, cria *workers* |
 | Worker por sala | `worker_threads` (`quiz-room-server.js`) | Fluxo da sala e pontuação |
 | Mensageria | Ably | Canais `<sala>:primary` e por jogador |
@@ -40,7 +40,7 @@ quiz-default-questions.js perguntas padrão (gabarito 0-based)
 lib/quiz-engine.js        normalizeCustomQuestion, createScoreboard (puro)
 lib/room-registry.js      createRoomRegistry, applyWorkerMessage (puro)
 tests/quiz.test.js        node:test + supertest
-realtime-quiz/            front Vue 2
+realtime-quiz/            front Vue 3
 ```
 
 ## 3. Modelo de dados (em memória)
@@ -56,7 +56,7 @@ realtime-quiz/            front Vue 2
 | Rota | Resposta |
 |---|---|
 | `GET /health` | `200 {status:"ok", rooms, ...}` |
-| `GET /auth` | `200` token Ably (clientId `randomUUID`, TTL 1 h) · `502` se a Ably falhar |
+| `GET /auth` | `200` token Ably (clientId `randomUUID`, TTL 1 h, permissões por canal) · `502` se a Ably falhar · `503` sem chave |
 | `GET /checkRoomStatus?quizCode=` | `200 {isRoomClosed}` · `400` código fora do padrão |
 | `GET /`, `GET /play` | `index.html` do build |
 
@@ -70,3 +70,16 @@ realtime-quiz/            front Vue 2
 ## 6. Fora do escopo
 
 Migração para Vue 3/Vite; acessibilidade do front; persistência de resultados; capability Ably por sala; autenticação de host com senha.
+
+## Canais e permissões do token (07/11/2026)
+
+O navegador recebe um token criado em `/auth` com `capability` mínima (`capabilityDoCliente` em `server.js`). O worker de cada sala usa a chave e tem acesso total. O curinga `*` vale um segmento inteiro do nome, separado por `:` (documentação do Ably: https://ably.com/docs/auth/capabilities).
+
+| Canal | Quem publica | Permissão do navegador |
+|---|---|---|
+| `main-quiz-thread` | ninguém; o host entra na presença para pedir a sala | `presence` |
+| `<sala>:primary` | só o worker | `subscribe`, `presence` |
+| `<sala>:host` | o host (iniciar, próxima pergunta, encerrar) | `publish` |
+| `<sala>:player-ch-<clientId>` | o próprio jogador | `publish` só no canal do seu `clientId` |
+
+Risco que fica: sem login, qualquer token ainda pode publicar no `<sala>:host` de outra sala se souber o código. Fechar isso exige o servidor emitir token por papel e sala. O jogo com chave real não foi percorrido depois da mudança (#14).
