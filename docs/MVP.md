@@ -2,10 +2,10 @@
 
 > Revisto em 09/11/2026 (ciclo de 07/11/2026). **Nível: Estudo (N1).** Meta: N1. Testado no Windows com Node 24 e no CI com Node 22. Não houve teste com pessoas nem em aparelho real.
 
-**Resumo:** 8 de 10 aplicáveis atendidos
+**Resumo:** 9 de 10 aplicáveis atendidos
 **Finalizado:** sim
 
-Régua N1: os critérios 5 e 7 são "Não se aplica (N1)" e saem do denominador. Antes deste ciclo: 7 de 10. Os dois parciais (3 e 10) dependem do responsável e têm issue com `depende-do-responsavel` (#14 e #15). O ciclo ainda não está na `main`: o PR da sprint para a `main` espera a revisão do responsável.
+Régua N1: os critérios 5 e 7 são "Não se aplica (N1)" e saem do denominador. Antes deste ciclo: 7 de 10. O parcial que resta (3) depende do responsável e tem issue com `depende-do-responsavel` (#14). O 10 passou a "Atende" em 10/11/2026, com a `main` protegida (#15). O ciclo ainda não está na `main`: o PR da sprint para a `main` espera a revisão do responsável.
 
 | # | Critério | Como verificar | Situação (09/11/2026) |
 |---|---|---|---|
@@ -18,7 +18,7 @@ Régua N1: os critérios 5 e 7 são "Não se aplica (N1)" e saem do denominador.
 | 7 | Desempenho aceitável | LCP de até 2,5 s no celular | Não se aplica (N1). |
 | 8 | Acessibilidade básica | axe e teclado | Atende: axe-core 4.10 no navegador em 09/11, tela `/play`: só `page-has-heading-one` (moderado); foco visível no botão do aviso; sem rolagem em 375 px; `id="app"` duplicado corrigido na migração. |
 | 9 | Segurança e conformidade | Riscos decididos | Atende: `npm audit --omit=dev` sem alertas na raiz e em `realtime-quiz` (09/11, Vue 3.5 e Vue Router 4.6, #18). Token de `/auth` com permissões por canal (#17, teste `token do navegador: permissões mínimas por canal`). Risco decidido: 2 alertas só de desenvolvimento no Vite 5 (servidor local, não vai ao build), com issue para o Vite novo. |
-| 10 | Entrega confiável | CI verde antes de entrar na principal | Parcial (depende do responsável, #15): CI verde nos PRs para `developer/**` e `main`; a `main` segue sem proteção. |
+| 10 | Entrega confiável | CI verde antes de entrar na principal | Atende: `gh api repos/douglasabnovato/cm-quiz-app/rulesets` em 10/11/2026: ruleset `principal-protegida` ativo (exige PR, bloqueia force push e exclusão); o workflow `CI` roda nos PRs para `developer/**` e `main` (#15). |
 | 11 | Testes dos fluxos críticos | Testes automatizados no CI | Atende: 11 testes no CI (`npm test`), mais lint e build do front. |
 | 12 | Documentação honesta | O README ensina a rodar | Atende: README e `docs/ARQUITETURA.md` atualizados em 09/11 (Vue 3, canais e permissões). |
 

@@ -18,13 +18,13 @@
 - O token de `/auth` só tem as permissões de cada canal do jogo (#17). Detalhes em [docs/ARQUITETURA.md](docs/ARQUITETURA.md).
 - Sem chave do Ably, o aviso aparece de imediato e o navegador não fica pedindo token.
 - Fluxo das telas percorrido no navegador sem chave (registro no `docs/MVP.md`, critério 3).
-- `docs/MVP.md`: 8 de 10 critérios aplicáveis; os 2 parciais dependem do responsável.
+- `docs/MVP.md`: 9 de 10 critérios aplicáveis; o parcial que resta (3) depende do responsável. A `main` está protegida desde 10/11/2026 (exige PR e bloqueia force push).
 
 **O que queremos fazer**
 - [#19](https://github.com/douglasabnovato/cm-quiz-app/issues/19) Teste de interface das telas sem tempo real.
 - Atualizar o Vite, traduzir as telas que seguem em inglês e desligar "Criar" quando o jogo ao vivo estiver desligado (issues do ciclo de 07/11).
 - [#14](https://github.com/douglasabnovato/cm-quiz-app/issues/14) Chave do Ably para demonstrar o jogo (responsável).
-- [#15](https://github.com/douglasabnovato/cm-quiz-app/issues/15) Proteger a `main` (responsável).
+- [#15](https://github.com/douglasabnovato/cm-quiz-app/issues/15) Proteger a `main`: feito em 10/11/2026 (ruleset `principal-protegida`); a issue fecha no merge da `main`.
 - [#16](https://github.com/douglasabnovato/cm-quiz-app/issues/16) Decidir a publicação: o link do Render deu 404 em 09/11 (responsável).
 
 **Onde está a documentação**
