@@ -175,3 +175,5 @@
 **Este ciclo executa.** Itens 1 a 8.
 
 **Vira issue.** Modo local sem Ably (item 9) e o teste do jogo completo com chave no CI. Seguem com o responsável: #14 (chave do Ably) e #16 (publicação no Render).
+
+**Resultado (16/11/2026).** Itens 1 a 8 feitos no PR #30. A checagem do `dist` falhou no primeiro run (43803746597): o build no Windows, com CRLF, gerava hashes diferentes do Linux. O `.gitattributes` com LF no front resolveu (run 43803969419 verde). Novas issues: #31 (modo local), #32 (Dependabot e `e2e` obrigatório, responsável), #33 (gerar o front no deploy), #34 (imagens), #35 (Express 5 e Ably 2).

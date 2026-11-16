@@ -1,73 +1,72 @@
 # Deploy · CM Quiz App
 
-Plano de ação para publicar o quiz em tempo real em hospedagem gratuita.
+> Revisto em 16/11/2026. Estado: **fora do ar**. `curl -s -o /dev/null -w "%{http_code}" https://cm-quiz-app.onrender.com/health` respondeu `404` em 16/11/2026: não há serviço com esse nome. Criar o serviço é do responsável ([#16](https://github.com/douglasabnovato/cm-quiz-app/issues/16)).
 
-## 1. Desafio
-
-Publicar um quiz ao vivo (Node + worker threads + Ably + front Vue 3) sem custo, sem expor a chave do Ably e sem depender de um build de front que não roda mais nas versões atuais do Node.
-
-## 2. Conteúdo
-
-### Decisão de hospedagem
+## 1. Decisão
 
 | Opção | Resultado |
 |---|---|
-| **Render, serviço web gratuito (escolhida)** | Roda o `server.js` (tokens do Ably + salas em worker threads) e entrega o front na mesma origem |
-| Front em hospedagem estática + servidor em outro lugar | Separaria o `/auth` do front e exigiria CORS, sem ganho |
+| **Render, serviço web gratuito (escolhida)** | Roda o `server.js` (tokens do Ably e salas em *worker threads*) e entrega o front na mesma origem, sem CORS |
+| Front em hospedagem estática e servidor em outro lugar | Separaria o `/auth` do front e exigiria CORS, sem ganho |
 
-### Decisões técnicas
+- **Infraestrutura como código:** `render.yaml` (Blueprint) na raiz. Serviço `cm-quiz-app`, plano `free`, branch `main`, Node 22, health check em `/health`.
+- **Build:** `npm ci --omit=dev`. O front não é compilado no Render: o `realtime-quiz/dist` é versionado, e o CI falha se ele não bater com o código (#33 propõe gerar no deploy).
+- **Chave do Ably:** só no painel do Render (`ABLY_API_KEY`, `sync: false`). O navegador recebe um token de 1 hora pelo `/auth`, com permissões só nos canais do jogo.
+- **Sem chave:** o servidor sobe só com as telas e avisa "jogo ao vivo desligado". Dá para publicar antes de ter a chave.
+- **Plano gratuito:** o serviço dorme depois de 15 minutos sem acesso e leva cerca de 1 minuto para acordar. Abra a página do host alguns minutos antes da gincana.
+- **Custo:** zero. Ably e Render nos planos gratuitos; nada de domínio próprio.
 
-- **Front já buildado:** `realtime-quiz/dist` está versionado e é servido direto. Desde 09/11/2026 o front é Vue 3 com Vite (#18); para recompilar, `npm run build:front` na raiz.
-- **Chave do Ably:** fica só no servidor (`ABLY_API_KEY`); o navegador recebe um token de 1 hora pelo `/auth`, com `clientId` gerado no servidor.
-- **Plano gratuito:** o serviço dorme após 15 min sem acesso (~1 min para acordar). Abra a página do host alguns minutos antes da gincana.
+## 2. Conferir localmente antes (Git Bash)
 
-### O que foi ajustado para o deploy
+```sh
+npm ci
+npm test                         # 16 testes
+npm run lint
+npx playwright install chromium
+npm run test:e2e                 # 9 testes no navegador, sem chave
+cd realtime-quiz && npm ci && npm run lint && npm run build && cd ..
+git status --short realtime-quiz/dist   # vazio: o dist versionado está em dia
+npm start                        # http://localhost:8082
+```
 
-| Mudança | Arquivo | Por quê |
-|---|---|---|
-| Blueprint do serviço web com `ABLY_API_KEY` pedida no painel | `render.yaml` | Infraestrutura como código sem segredo no repositório |
-| Dependências atualizadas dentro das mesmas versões maiores | `package-lock.json` | `npm audit` apontava 16 pacotes (4 críticos, 5 altos, vindos de `express` e `ably` antigos); `npm audit fix` sem mudança de versão maior zerou tudo |
-| Seção de deploy com link e decisões | `README.md` | Instrução correta de build (sem `build:front`) |
+## 3. Passo a passo do responsável
 
-### Verificação feita antes da entrega
+### Etapa 1 · Chave do Ably (opcional para publicar, necessária para jogar)
 
-- `npm ci --omit=dev` limpo, 5 testes passando (`node --test`), `npm audit --omit=dev`: 0 vulnerabilidades.
+1. Entrar em **ably.com** e criar a conta gratuita (ou entrar na existente).
+2. **Create new app** → nome `cm-quiz-app` → **Create app**.
+3. No app, aba **API Keys** → **Create a new API key** → nome `cm-quiz-app-render` → marcar **Publish**, **Subscribe** e **Presence** → **Create key**.
+4. Copiar a chave só para o passo 6 da Etapa 2. Não colar em issue, PR, commit nem chat.
+5. Se uma chave antiga já foi compartilhada, revogar em **API Keys → Revoke**.
 
-## 3. Solução (passo a passo)
+### Etapa 2 · Serviço no Render
 
-### Etapa 1 · Trocar a chave do Ably
+1. Entrar em **dashboard.render.com** com a conta do GitHub.
+2. **New +** → **Blueprint**.
+3. Em **Connect a repository**, escolher `douglasabnovato/cm-quiz-app` (se não aparecer: **Configure account** → dar acesso ao repositório → voltar).
+4. **Branch:** `main`. **Blueprint Name:** `cm-quiz-app`.
+5. O Render lê o `render.yaml` e mostra o serviço web `cm-quiz-app` no plano **Free**.
+6. No campo **ABLY_API_KEY**, colar a chave da Etapa 1 (ou deixar vazio para publicar só as telas).
+7. **Apply** (ou **Deploy Blueprint**).
+8. Abrir o serviço → **Logs** e esperar `Quiz em http://localhost:10000` (sem chave: `... (sem tempo real)`).
 
-1. No painel da Ably, **API Keys**: criar uma chave nova (capacidades: `publish`, `subscribe`, `presence`) e revogar a antiga, se ela já foi compartilhada.
-2. Guardar a chave para a Etapa 3.
+### Etapa 3 · Conferir no ar
 
-### Etapa 2 · Validar localmente e subir (Git Bash)
+1. Copiar o endereço real no topo da página do serviço. O Render pode acrescentar um sufixo (por exemplo `cm-quiz-app-xxxx.onrender.com`).
+2. `curl -s https://<endereço>/health` → `{"status":"ok","realtime":true,...}` (`false` se publicou sem chave).
+3. Abrir `https://<endereço>/` no computador e criar uma sala com um nome de host.
+4. No celular, abrir o link de convite, escrever o nome da equipe e entrar.
+5. Começar o quiz, responder e ver o placar.
 
-1. `cd /c/ambiente-projeto/ser-mvp/cm-quiz-app`
-2. Criar `.env` a partir do `.env.example` com a chave nova.
-3. `npm ci`
-4. `npm test` (5 testes)
-5. `npm start` e abrir http://localhost:8082
-6. `quiz-default-questions copy.js`: removido em 06/11/2026.
-7. `git status` (o `.env` não pode aparecer)
-8. `git add -A`
-9. `git commit -m "fix: gabarito 0-based, 1 resposta por jogador, comandos só do host, dependências sem vulnerabilidades e deploy no Render"`
-10. `git push`
+### Etapa 4 · Registrar
 
-### Etapa 3 · Criar o serviço no Render
+1. Comentar na #16 o endereço real e o resultado do passo 2 da Etapa 3 (sem a chave).
+2. No GitHub, na página do repositório: engrenagem de **About** → **Website** → colar o endereço → **Save changes**.
+3. Se o endereço for diferente de `https://cm-quiz-app.onrender.com`, o próximo ciclo corrige o README e este arquivo.
 
-1. Entrar em **render.com** com o GitHub e autorizar o repositório `cm-quiz-app`.
-2. **New → Blueprint** e escolher `douglasabnovato/cm-quiz-app`.
-3. O Render pede o valor de `ABLY_API_KEY`: colar a chave nova.
-4. **Apply** e acompanhar **Logs** até aparecer `Quiz em http://localhost:10000`.
+## 4. Histórico
 
-### Etapa 4 · Conferir no ar
-
-1. `/health` responde `{"status":"ok", ...}`.
-2. Criar uma sala como host no computador.
-3. No celular, entrar como jogador pelo código da sala.
-4. Iniciar o quiz, responder e ver o placar; responder duas vezes a mesma pergunta não soma pontos.
-
-### Etapa 5 · Fechar
-
-1. Se a URL real for diferente de `https://cm-quiz-app.onrender.com`, corrigir no `README.md`, commit e push.
-2. No GitHub, **About → Website**: colar a URL.
+- 30/10 e 06/11/2026: o link do Render respondeu 404.
+- 06/11/2026: o servidor passou a subir sem a chave, só com as telas.
+- 09/11/2026: front em Vue 3; o `dist` versionado continua servido direto.
+- 16/11/2026: CI confere que o `dist` bate com o código; Vite 7 no front.
