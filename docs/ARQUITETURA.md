@@ -39,9 +39,14 @@ quiz-room-server.js       worker de cada sala
 quiz-default-questions.js perguntas padrão (gabarito 0-based)
 lib/quiz-engine.js        normalizeCustomQuestion, createScoreboard (puro)
 lib/room-registry.js      createRoomRegistry, applyWorkerMessage (puro)
-tests/quiz.test.js        node:test + supertest
-realtime-quiz/            front Vue 3
+tests/quiz.test.js        node:test + supertest (regras e rotas)
+tests/conexao.test.mjs    avisos de conexão do front
+tests/sala.test.mjs       regra do botão de criar sala
+e2e/telas.e2e.js          Playwright + axe: telas sem chave do Ably (job e2e do CI)
+realtime-quiz/            front Vue 3 (Vite 7); src/conexao.js e src/sala.js são regras puras
 ```
+
+O `realtime-quiz/dist` é versionado e servido pelo `server.js`. O CI recompila o front e falha se o resultado não bater com o `dist`; o `.gitattributes` do front fixa LF para o build no Windows sair igual ao do CI (16/11/2026).
 
 ## 3. Modelo de dados (em memória)
 

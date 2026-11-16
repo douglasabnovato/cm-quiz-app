@@ -1,337 +1,94 @@
-> **Projeto de estudo.** Estado conferido em 31/10/2026: os endereços que seguem fora do ar foram retirados deste README. Detalhes em [docs/AVALIACAO.md](docs/AVALIACAO.md) e próximos passos em [docs/PLANO-ESTRATEGICO.md](docs/PLANO-ESTRATEGICO.md).
+# CM Quiz App
 
-<h4 align="center">cm-quiz-app</h4>
+[![CI](https://github.com/douglasabnovato/cm-quiz-app/actions/workflows/ci.yml/badge.svg)](https://github.com/douglasabnovato/cm-quiz-app/actions/workflows/ci.yml)
 
-## 🧠 O que aprendi
+Quiz ao vivo para gincana escolar. Quem organiza cria uma sala e projeta a tela; as equipes entram pelo celular com um link, respondem às perguntas e veem o placar mudar na hora.
 
-> Proposta de 01/11/2026, escrita a partir do código e das dependências. Ajuste com a sua experiência.
+Feito para o 5º Desafio Global do Conhecimento do Mundo CM (Colégio Militar). **Projeto de estudo (nível N1)**: Vue 3, Node.js e tempo real com Ably.
 
-- Sincronizar um jogo em tempo real com Ably.
-- Separar o servidor Express, que entrega os arquivos e emite tokens, do front em Vue.
-- Manter a chave do serviço fora do código, com variáveis de ambiente.
-- Testar regras do jogo com `node --test`.
+| Tela do host (computador) | Tela da equipe (celular) |
+|---|---|
+| <img src="docs/img/tela-host.jpg" alt="Tela inicial do host, com o banner do Desafio Global do Conhecimento e o botão Configurar o Quiz Mundo CM" width="480"> | <img src="docs/img/tela-equipe.jpg" alt="Tela da equipe no celular, com o campo Nome da equipe preenchido e o botão Entrar" width="200"> |
 
-## Estado e próximos passos (ciclo de 07/11/2026)
+## Como funciona
 
-**O que foi feito** (09/11/2026, na sprint `developer/sprint-2026-11-12`; a `main` recebe depois da revisão do responsável)
-- O front passou para Vue 3 e Vue Router 4 (#18). `npm audit --omit=dev` sem alertas.
-- O token de `/auth` só tem as permissões de cada canal do jogo (#17). Detalhes em [docs/ARQUITETURA.md](docs/ARQUITETURA.md).
-- Sem chave do Ably, o aviso aparece de imediato e o navegador não fica pedindo token.
-- Fluxo das telas percorrido no navegador sem chave (registro no `docs/MVP.md`, critério 3).
-- `docs/MVP.md`: 9 de 10 critérios aplicáveis; o parcial que resta (3) depende do responsável. A `main` está protegida desde 10/11/2026 (exige PR e bloqueia force push).
+1. O host abre `/`, escreve o nome e cria a sala.
+2. O app gera um link `/play?quizCode=<sala>`; as equipes abrem no celular e escrevem o nome da equipe.
+3. O host começa o quiz. Cada pergunta tem 30 segundos; acerto vale 5 pontos e cada equipe responde uma vez.
+4. Depois de cada pergunta aparece o placar; no fim, o placar final.
+
+Só o host inicia, avança e encerra o quiz. Depois do início, a sala fecha para novas equipes.
+
+## Estado e próximos passos (ciclo de 16/11/2026)
+
+**Critérios do MVP:** 9 de 10 aplicáveis atendidos, **finalizado: sim** ([docs/MVP.md](docs/MVP.md)). O que falta (jogo ao vivo percorrido no navegador) depende da chave do Ably, que só o responsável cria; a #31 propõe um modo local sem Ably.
+
+**O que foi feito**
+- 16/11/2026, [PR #30](https://github.com/douglasabnovato/cm-quiz-app/pull/30), na sprint `developer/sprint-2026-11-19` (a `main` recebe depois da revisão do responsável):
+  - teste no navegador com Playwright e axe no CI (job `e2e`): telas do host e da equipe, teclado, falhas e celular;
+  - telas em português, com `lang="pt-BR"`, rótulos nos campos e um `h1` por tela;
+  - sem tempo real, o botão "Criar meu Quiz" explica o motivo; a sala que não fica pronta em 20 s avisa e libera o botão;
+  - falha ao conferir a sala da equipe vira aviso com "Conferir a sala de novo";
+  - Vite 7 no front: `npm audit` sem alertas, também nas dependências de desenvolvimento.
+- 09/11/2026, [PR #22](https://github.com/douglasabnovato/cm-quiz-app/pull/22): front em Vue 3 e token do Ably com permissões por canal.
+- 06/11/2026, [PR #20](https://github.com/douglasabnovato/cm-quiz-app/pull/20): o servidor sobe sem a chave do Ably e avisa na tela.
 
 **O que queremos fazer**
-- [#19](https://github.com/douglasabnovato/cm-quiz-app/issues/19) Teste de interface das telas sem tempo real.
-- Atualizar o Vite, traduzir as telas que seguem em inglês e desligar "Criar" quando o jogo ao vivo estiver desligado (issues do ciclo de 07/11).
-- [#14](https://github.com/douglasabnovato/cm-quiz-app/issues/14) Chave do Ably para demonstrar o jogo (responsável).
-- [#15](https://github.com/douglasabnovato/cm-quiz-app/issues/15) Proteger a `main`: feito em 10/11/2026 (ruleset `principal-protegida`); a issue fecha no merge da `main`.
-- [#16](https://github.com/douglasabnovato/cm-quiz-app/issues/16) Decidir a publicação: o link do Render deu 404 em 09/11 (responsável).
+- [#14](https://github.com/douglasabnovato/cm-quiz-app/issues/14) Chave do Ably para demonstrar o jogo ao vivo (responsável).
+- [#31](https://github.com/douglasabnovato/cm-quiz-app/issues/31) Testar o jogo completo sem o Ably, com um modo local.
+- [#23](https://github.com/douglasabnovato/cm-quiz-app/issues/23) Token do Ably por papel e por sala.
+- [#34](https://github.com/douglasabnovato/cm-quiz-app/issues/34) Reduzir o peso das imagens do cabeçalho.
+- [#33](https://github.com/douglasabnovato/cm-quiz-app/issues/33) Gerar o front no deploy, sem versionar o `dist`.
+- [#35](https://github.com/douglasabnovato/cm-quiz-app/issues/35) Atualizar o servidor para Express 5 e Ably 2.
+- [#16](https://github.com/douglasabnovato/cm-quiz-app/issues/16) e [#32](https://github.com/douglasabnovato/cm-quiz-app/issues/32): publicar no Render, ligar o Dependabot e exigir o `e2e` na `main` (responsável).
 
 **Onde está a documentação**
-- [docs/MVP.md](docs/MVP.md): critérios e estado.
-- [docs/PLANO-DE-ACAO.md](docs/PLANO-DE-ACAO.md): seção "Ciclo de 07/11/2026", com pesquisa, backlog e engenharia.
-
-## Projeto
-
-Quiz em tempo real para gincana escolar entre equipes. Um host cria a sala (perguntas padrão ou de uma planilha Google), compartilha o link e controla o ritmo; as equipes respondem pelo celular e o placar é atualizado ao vivo.
-
-Baseado no framework open source *realtime-quiz-framework* (Srushtika/Ably, Apache-2.0).
+- [docs/MVP.md](docs/MVP.md): critérios, evidências e hipótese.
+- [docs/PLANO-DE-ACAO.md](docs/PLANO-DE-ACAO.md): plano de cada ciclo, com pesquisa e fontes.
+- [docs/ARQUITETURA.md](docs/ARQUITETURA.md): C4, contratos, canais e permissões do token.
+- [docs/DEPLOY.md](docs/DEPLOY.md): publicação no Render, passo a passo.
+- [docs/ORIGINAL.md](docs/ORIGINAL.md) e [TUTORIAL.md](TUTORIAL.md): documentação do projeto original, em inglês.
 
 ## Como rodar
 
-Requer Node 20 ou superior e uma conta gratuita na [Ably](https://ably.com).
+Requer Node 20.19 ou mais novo. Para o jogo ao vivo, uma conta gratuita na [Ably](https://ably.com); sem a chave, as telas abrem e avisam que o jogo ao vivo está desligado.
 
 ```sh
 npm install
-cp .env.example .env        # preencha ABLY_API_KEY (sem ela, só as telas abrem)
+cp .env.example .env        # preencha ABLY_API_KEY
 npm run build:front         # gera realtime-quiz/dist (Vite)
 npm start                   # http://localhost:8082
-npm test                    # 11 testes (node:test)
 ```
 
-## Regras do jogo
+## Testes
 
-- 5 pontos por acerto; cada jogador responde uma vez por pergunta, só enquanto ela está aberta.
-- Somente o host da sala inicia, avança e encerra o quiz.
-- Depois do início, a sala fecha para novas entradas.
-
-## Documentação
-
-- [docs/ANALISE.md](docs/ANALISE.md) — requisitos, defeitos e nota
-- [docs/ARQUITETURA.md](docs/ARQUITETURA.md) — C4, contratos e ADRs
-- [docs/PLANO-DE-ACAO.md](docs/PLANO-DE-ACAO.md) — prioridades
-
-## Deploy gratuito
-
-**Demonstração:** Fora do ar desde a conferência de 31/10/2026; para ver o projeto, rode localmente (seção "Como rodar").
-
-Render (Web Service gratuito), configurado em `render.yaml`: build `npm ci --omit=dev`, start `npm start`, health check em `/health` e a variável `ABLY_API_KEY` informada no painel. O front Vue 3 é servido já buildado de `realtime-quiz/dist`, gerado com Vite (Vue 3 desde 09/11/2026, #18). Sem `ABLY_API_KEY`, o servidor sobe só com as telas e avisa que o jogo ao vivo está desligado. Passo a passo completo: [docs/DEPLOY.md](docs/DEPLOY.md).
-
----
-
-## Documentação original (em inglês)
-
-### A scalable, full-stack live quiz framework built with VueJS and NodeJS
-
-This repository contains a scalable framework for building a real-time quiz app, which can double up as a test-taking app in an e-learning scenario or be used for a Pub Quiz Friday with your work mates.
-
-<img width="1424" alt="Host home" src="https://user-images.githubusercontent.com/5900152/96634667-bd3a8480-1312-11eb-80ea-5a72ef329692.png">
-
-It provides full control of the sequence of events to the host and is able to simultaneously run any number of quiz rooms, with any number of people in each of those (using Node JS worker threads!).
-
-<img width="1440" alt="Custom quiz option" src="https://user-images.githubusercontent.com/5900152/96635120-608b9980-1313-11eb-86b7-059ff18e7d1e.png">
-
-The hosts have an option to add their own questions, optionally with images, via Google Sheets.
-
-<img width="1437" alt="Ongoing quiz screen" src="https://user-images.githubusercontent.com/5900152/96634661-bad82a80-1312-11eb-9e61-661e42eaf485.png">
-
-<img width="1438" alt="Host admin controls" src="https://user-images.githubusercontent.com/5900152/96634642-b6ac0d00-1312-11eb-9ebb-0b7cd9122fc3.png">
-
-The real-time messaging is powered by [Ably’s real-time infrastructure](https://www.ably.io), meaning, it can have enterprise-level scalability without needing to change anything in the code. Ideally, you’d take this open-sourced framework as a starting point and customize it to make it your own.
-
-This framework is built on top of the [multiplayer games networking framework](https://github.com/Srushtika/multiplayer-games-scalable-networking-framework) that allows continuous streaming of data between various players and the game server. This framework is a bit different in that it allows for a more on-demand progression of the app by giving adequate controls of the app flow to the host.
-
-You can check out a [blog article](https://www.ably.io/blog/a-scalable-realtime-quiz-framework-to-build-edtech-apps/) I wrote, to learn more about the uses of this framework.
-
-#### Check out the [functional demo](https://quiz.ably.dev/) for this realtime quiz framework.
-
----
-
-### The tech stack
-
-##### Frameworks/ Languages
-
-- [Vue JS](https://vuejs.org/)
-- [Node JS](https://nodejs.org/en/)
-
-##### Libraries
-
-- [Ably Realtime](https://ably.io/)
-- [Express](https://expressjs.com/)
-- [Vue Router](https://router.vuejs.org/)
-- [Axios](https://www.npmjs.com/package/axios)
-- [G Sheets API](https://www.npmjs.com/package/g-sheets-api)
-- [Bootstrap](https://getbootstrap.com/)
-- [DotEnv](https://www.npmjs.com/package/dotenv)
-
-### How to run this framework locally
-
-1. Clone this repository
-
-   ```sh
-   git clone https://github.com/Srushtika/realtime-quiz-framework.git
-   ```
-
-2. Change directory into the project folder
-
-   ```sh
-   cd realtime-quiz-framework
-   ```
-
-3. Install the dependencies
-
-   ```sh
-   npm install
-   cd realtime-quiz
-   npm install
-   cd ..
-   ```
-
-4. Create a free account with [Ably Realtime](https://www.ably.io/) to get your Ably API KEY. Add a new file called `.env` and add the following. (Remember to replace the placeholder with your own API Key. You can get your Ably API key from your Ably dashboard):
-
-   ```
-   ABLY_API_KEY=<YOUR-ABLY-API-KEY>
-   PORT=5000
-   ```
-
-5. Run the server
-
-   ```sh
-   node server.js
-   ```
-
-6. Open the app in your browser at [http://localhost:5000](http://localhost:5000). Choose the quiz type and create a quiz room.
-
-7. Copy the shareable link and open it in a separate browser window. This is best experienced in mobile view. Open multiple of these to simulate multiple players if you like.
-
-8. Start the quiz when you are ready and have the players answer the questions as they appear.
-
-Voila! Your live quiz framework is up and running. Customize this framework and make it your own. Feel free to share your quiz app with me on [Twitter](https://twitter.com/Srushtika), I'll be happy to give it a shoutout!
-
----
-
-### What’s in which file?
-
-#### Server-side files
-
-1. `server.js`
-
-This file has the main server thread. It performs three functions:
-
-- Serve the front-end VueJS app using Express.
-- Authenticate front-end clients with the Ably Realtime service using [Token Auth strategy](https://www.ably.io/documentation/core-features/authentication#token-authentication).
-- Create and manage Node JS worker threads when a host requests to create a quiz room.
-
-2. `quiz-room-server.js`
-
-This file represents a Node JS worker thread. A new instance of this file will run for every quiz room created.
-
-After a live quiz session is finished, the relevant worker thread is killed. When a new player joins or leaves the worker thread communicates with the parent thread (i.e. main thread aka server.js) and lets it know the number of players (among other things).
-
-3. `quiz-default-questions.js`
-
-This file exports a JSON array with a set of quiz questions with options and correct answers. This will be used by the `quiz-room-server` when a host chooses the "Host a randomly chosen quiz" option.
-
-4. `cores`
-````css 
-jogo {
-  color: rgba(1, 67, 57);
-}
-
-jogar {
-  color: rgba(103, 169, 133);
-}
-
-joga {
-  color: rgba(179, 210, 194);
-}
-
-````
-
-#### Client-side files
-
-The client-side is written in VueJS with the following file structure (Note: Only the relevant files are listed here)
-
-```
-realtime-quiz
-|___dist
-|___public
-|   |___index.html
-|___src
-    |___main.js
-    |___routes.js
-    |___App.vue
-    |___components
-        |
-        |___common
-        |   |___Answer.vue
-        |   |___OnlinePlayers.vue
-        |   |___Question.vue
-        |
-        |___host
-        |   |___AdminPanel.vue
-        |   |___CreateQuizRoom.vue
-        |   |___HostHome.vue
-        |   |___Leaderboard.vue
-        |   |___LiveStats.vue
-        |
-        |___player
-            |___PlayerHome.vue
+```sh
+npm test                    # regras do jogo, rotas e regras do front (node:test)
+npm run lint                # servidor, testes e e2e
+npx playwright install chromium
+npm run test:e2e            # telas no navegador, sem a chave do Ably, com axe e teclado
+cd realtime-quiz && npm run lint && npm run build
 ```
 
-1.  `dist` folder
+O CI roda tudo isso em cada PR para `main` e `developer/**` ([.github/workflows/ci.yml](.github/workflows/ci.yml)) e confere se o `realtime-quiz/dist` versionado bate com o build.
 
-    The dist folder contains the built Vue app that is auto-generated when you run the `npm run build` command after finishing your work on the Vue app. The `index.html` file in this folder is what’s served by our express server (for all routes, as routing is handled in the front-end using `vue-router`)
+## Como é feito
 
-2.  `public` folder
+- **Servidor** (`server.js`): Express entrega o front, emite o token do Ably em `/auth` e cria uma *worker thread* por sala (`quiz-room-server.js`).
+- **Front** (`realtime-quiz/`): Vue 3, Vue Router 4 e Vite 7.
+- **Tempo real:** Ably, com canais por sala e presença. O navegador recebe um token com permissões só nos canais do jogo; a chave fica no servidor.
 
-    The public folder contains the `index.html` file inside which all the components will be rendered based on the app logic.
+## Publicação
 
-3.  `src` folder, `main.js` and `routes.js`
+Fora do ar: `https://cm-quiz-app.onrender.com` responde 404 (conferido em 16/11/2026). O `render.yaml` está pronto; criar o serviço é do responsável ([#16](https://github.com/douglasabnovato/cm-quiz-app/issues/16), passo a passo em [docs/DEPLOY.md](docs/DEPLOY.md)).
 
-    The src folder contains our app files starting with the main.js file which instantiates a new Vue instance with `App.vue` being the top-level component. We also instantiate the Vue Router instance in this file. The different components to be rendered based on the routes are listed in the routes.js file.
+## O que aprendi
 
-4.  `App.vue`
+- Sincronizar um jogo em tempo real com Ably: canais, presença e token com permissões mínimas.
+- Separar o servidor Express, que entrega os arquivos e emite tokens, do front em Vue.
+- Manter a chave do serviço fora do código, com variáveis de ambiente.
+- Testar regras com `node --test` e as telas com Playwright e axe.
 
-    As this is the top-level component for our Vue app, it instantiates the Ably library using the Token Authentication strategy and passes on the `realtime` instance to its child components so they can use it as they need.
+## Créditos e licença
 
-5.  `components` folder
-    This folder contains all the child components for `App.vue`. They are placed in different folders for a better context.
-
-    The `common` folder has components that are common to the host of the quiz app and the players. The `host` folder has components that are visible to the host only. The `player` folder has components that are visible to the player only.
-
-6.  `common/OnlinePlayers.vue`
-
-    This component holds the logic and UI to show a staging area with a list of players who are online. New players are added to this list as they join in realtime. For every player, a thumbnail of their randomly chosen unique colored avatar along with a name as a tagline underneath appears.
-
-7.  `common/Question.vue`
-
-    This component holds the logic and UI to show a card with the question, optionally an image, and four options.
-
-    The players have buttons to choose one of the options whereas the host has the options listed as non-clickable divs as they won’t be answering the questions.
-
-8.  `common/Answer.vue`
-
-    This component holds the logic and UI to show a card with the answer. For the player, this component appears standalone and also indicates if the option they chose was correct or not. For the host, this component replaces the four options in the question.
-
-9.  `host/HostHome.vue`
-
-    This is the main component that is shown when anyone lands on the app. By default, all the hosts land on this page and they get a shareable URL to invite their players after they have chosen the type of quiz they'd like to host. This component allows the host to choose the quiz type and provides a way to upload their own questions if they need.
-
-10. `host/CreateQuizRoom.vue`
-
-    This component holds the logic and UI to allow the host to create a new quiz room and get a shareable URL to invite players to that quiz room.
-
-11. `host/Leaderboard.vue`
-
-    This component is visible to the host after every question. It shows the top five scorers in the quiz until that point. If the quiz has ended, the same component displays a full leaderboard with all the participants.
-
-12. `host/AdminPanel.vue`
-
-    This component is visible to the host after every question, giving them options to show the next question when they are ready, or end the quiz midway through.
-
-13. `host/LiveStats.vue`
-
-    This component is visible to the host at the time of a question being displayed. It shows live stats on how many players are still online and out of those, how many have already selected an option for that question. This component can be extended to include the names of the players who have answered, as they do, or any other live stats.
-
-14. `player/Playerhome.vue`
-
-    This component is visible to the player. This is the first page they see when they follow a link shared by their host. It allows them to add their nickname and enter the quiz room created by their host. They’ll be waiting along with other players until the host decides to start the quiz.
-
-If you want to learn more about the source code, you should check out the [TUTORIAL.md](https://github.com/Srushtika/realtime-quiz-framework/blob/main/TUTORIAL.md) for a more thorough breakdown.
-
-## Core concepts
-
-### The communication architecture
-
-Before we look at the architecture and design of the app, we need to understand a few concepts based on which this app is built
-
-#### App architecture
-
-This app is designed in a way where the server can be considered as the single source of truth and is responsible to maintain the latest quiz state at all times.
-
-All the players send their answers to the server, which in turn collates them together, computes the leaderboard, and sends this info to the host of the quiz. The server is also responsible for publishing new questions, the timer in between questions, and the correct answer after the time has elapsed or all the players have answered.
-
-The client-side script will use this information from the server and render various components accordingly, ensuring all the players are fully in-sync.
-
-<img width="831" alt="App architecture" src="https://user-images.githubusercontent.com/5900152/96641748-190a0b00-131d-11eb-817e-7e9722b78a4b.png">
-
-#### The WebSockets protocol
-
-The [WebSockets protocol](https://www.ably.io/concepts/websockets), unlike HTTP, is a stateful communications protocol that works over TCP. The communication initially starts off as an HTTP handshake, but if both the communicating parties agree to continue over WebSockets then the connection is elevated; giving rise to a full-duplex, persistent connection. This means the connection remains open for the duration that the application is in use. This gives the server a way to initiate any communication and send data to pre-subscribed clients, so they don’t have to keep sending requests inquiring about the availability of new data. Which is exactly what we need in our quiz!
-
-This project uses [Ably Realtime](https://www.ably.io) to implement WebSocket based realtime messaging between the server, host and the players. Ably, by default, deals with scalability, protocol interoperability, reliable message ordering, guaranteed message delivery, historical message retention and authentication, so we don't have to. This communication follows the [Pub/Sub messaging pattern](https://www.ably.io/concepts/pub-sub).
-
-##### Publish/Subscribe messaging pattern
-
-[Pub/Sub](https://www.ably.io/concepts/pub-sub) messaging allows various front-end or back-end clients to publish some data and/or subscribe to some data. For any active subscriptions, these clients will receive asynchronous event callbacks when a new message is published.
-
-##### Channels
-
-In any realtime app, there's a lot of moving data involved. [Channels](https://www.ably.io/documentation/core-features/channels) help us group this data logically and let us implement subscriptions per channel. This allowing us to implement the custom callback logic for different scenarios. In the diagram above, each color would represent a channel.
-
-##### Presence
-
-[Presence](https://www.ably.io/documentation/core-features/presence) is an Ably feature using which you can track the connection status of various clients on a channel. In essence, you can see who has just come online and who has left using each client's unique `clientId`
-
-#### Sequence of events with Node JS worker threads (For an example quiz)
-
-<img width="1087" alt="Sequence of events" src="https://user-images.githubusercontent.com/5900152/96642271-d72d9480-131d-11eb-8457-df6178cf4196.png">
-
----
-
-## Load tests and limits
-
-- All of Ably's messaging limits, broken down by package can be found in a [support article](https://support.ably.com/support/solutions/articles/3000053845-do-you-have-any-connection-message-rate-or-other-limits-on-accounts-).
-
-- We are currently performing load and performance tests on this framework and will update this guide with that info when it's available. If this is important to you, please [leave a message to me directly on Twitter](https://www.twitter.com/Srushtika) or reach out to Ably's support at [support@ably.com](mailto:support@ably.com)
+Baseado no *realtime-quiz-framework*, projeto open source da Ably, sob a licença Apache-2.0 ([LICENSE](LICENSE)). A documentação original está em [docs/ORIGINAL.md](docs/ORIGINAL.md).
