@@ -7,7 +7,7 @@
         </a>
       </div>
       <div class="card-body home-text">
-        <h1 class="card-title h5">Bem vindo ao 5º Desafio Global do Conhecimento!!</h1>
+        <h1 class="card-title h5">Bem-vindo ao 5º Desafio Global do Conhecimento!</h1>
         <p class="card-text">
           Vamos criar nosso quiz do 5º Desafio Mundial do Conhecimento.
           Teremos um host para acompanhar as questões e estatísticas das equipes participantes.
@@ -26,7 +26,7 @@
           >
             Create your own quiz
           </button>-->
-          <button class="btn" type="submit" @click="setQuizType('RandomQuiz')">
+          <button class="btn" type="button" @click="setQuizType('RandomQuiz')">
             Configurar o Quiz Mundo CM
           </button>
         </template>
@@ -39,16 +39,10 @@
         </template>
       </div>
       <div class="card-footer text-muted footer-black">
-        <!--<a
-          href="https://github.com/Srushtika/realtime-quiz-framework"
-          target="_blank"
-          class="link"
-          >Learn how to build your own realtime quiz app with Ably &rarr;</a
-        >-->
       </div>
     </div>
     <template v-if="isTypeChosen">
-      <CreateQuizRoom :realtime="realtime" :ablyClientId="ablyClientId" :quizType="quizType" :showHome="showHome">
+      <CreateQuizRoom :realtime="realtime" :quizType="quizType" :showHome="showHome" :tempoRealDesligado="tempoRealDesligado">
       </CreateQuizRoom>
     </template>
   </div>
@@ -59,7 +53,7 @@
 import CreateQuizRoom from './CreateQuizRoom.vue';
 
 export default {
-  props: ['realtime', 'ablyClientId'],
+  props: ['realtime', 'tempoRealDesligado'],
   data() {
     return {
       isTypeChosen: false,
@@ -82,12 +76,7 @@ export default {
   },
   computed: {
     isSmallWidth() {
-      if (this.windowWidth > 480) {
-        console.log(this.windowWidth);
-        return false;
-      }
-      console.log(this.windowWidth);
-      return true;
+      return this.windowWidth <= 480;
     }
   }
 };
@@ -104,9 +93,9 @@ button {
   margin: 5px;
   width: 60%;
   font-size: 20px;
-  background: rgba(103, 169, 133);
+  background: rgba(43, 107, 79);
   background: linear-gradient(90deg,
-      rgba(103, 169, 133, 1) 75%,
+      rgba(43, 107, 79, 1) 75%,
       rgba(1, 67, 57, 1) 100%);
   border: 1px solid #ffffff;
   color: #ffffff;
@@ -137,7 +126,7 @@ button:hover {
 }
 
 .mobile-msg {
-  color: red;
+  color: #b00020;
 }
 
 @media only screen and (max-device-width: 480px) {

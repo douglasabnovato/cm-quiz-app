@@ -1,17 +1,17 @@
 <template>
   <div class="alert alert-secondary admin-panel" role="alert">
-    <h4 class="alert-heading">Host control panel</h4>
+    <h4 class="alert-heading">Painel do host</h4>
     <hr />
     <button
       type="button"
       class="btn btn-dark btn-next"
       @click="showNextQuestion()"
     >
-      Show next question
+      Próxima pergunta
     </button>
     <br />
     <button type="button" class="btn btn-link end-btn" @click="endQuizNow()">
-      End quiz and show results
+      Encerrar o quiz e mostrar o placar
     </button>
   </div>
 </template>

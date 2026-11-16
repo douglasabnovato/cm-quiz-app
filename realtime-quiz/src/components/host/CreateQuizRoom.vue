@@ -7,83 +7,89 @@
         </a>
       </div>
       <div v-if="!isRoomReady" class="card-body">
-        <h2 class="card-title">
-          
-          {{ quizType === 'CustomQuiz' ? 'your own ' : 'Preparem-se! O Quiz está quase começando. ' }}
-          
-        </h2>
+        <h1 class="card-title h2">
+          {{ quizType === 'CustomQuiz' ? 'Seu próprio quiz' : 'Preparem-se! O Quiz está quase começando.' }}
+        </h1>
         <template v-if="quizType == 'CustomQuiz'"
           ><div>
             <p class="card-text">
-              You can add your own quiz questions in Google Sheets and host a
-              live quiz. Simply make a copy of the template and fill it with
-              your data.
+              Você pode escrever as perguntas numa planilha do Google e
+              conduzir o quiz ao vivo. Faça uma cópia do modelo e preencha.
             </p>
             <div class="sheets-template">
               <a
                 class="orange-txt"
                 :href="templateCopyURL"
                 target="_blank"
-                role="button"
               >
-                Get the Google Sheets template</a
+                Copiar o modelo de planilha</a
               >
               <p class="card-text template-instructions">
-                After you've prepared the questions and answers, you need to do
-                two things: <br />
-                1. Copy the URL of your sheet from the browser's address bar and
-                paste it in the field below
+                Com as perguntas prontas, faça duas coisas: <br />
+                1. Copie o endereço da planilha na barra do navegador e cole
+                no campo abaixo
                 <input
                   class="form-control input-box"
-                  placeholder="Add the URL to your sheet"
+                  aria-label="Endereço da planilha"
+                  placeholder="Endereço da planilha"
                   v-model="sheetURL"
-                  :disabled="createBtnClicked"
+                  :disabled="criando"
                 />
-                2. Make your Google sheet publicly available by going to File >
-                Publish to the web > Publish. You might be presented with a
-                different shareable URL, you can ignore that.
+                2. Publique a planilha em Arquivo > Compartilhar > Publicar na
+                Web > Publicar. O endereço que aparece ali não é necessário.
               </p>
             </div>
           </div>
         </template>
 
-        <p class="card-text">
-          Esse nome é para os jogadores do seu Quiz possam identificá-lo.
+        <label for="nome-do-host" class="rotulo-nome">Nome do host</label>
+        <p id="ajuda-nome-do-host" class="card-text">
+          Esse nome é para as equipes do seu Quiz identificarem você.
         </p>
         <input
+          id="nome-do-host"
+          ref="campoNome"
           class="form-control input-box"
-          placeholder="Entre com o nome do host "
+          aria-describedby="ajuda-nome-do-host"
+          :aria-invalid="erroNome ? 'true' : null"
           v-model="hostNickname"
-          :disabled="createBtnClicked"
+          :disabled="criando"
           @keyup.enter="createQuizRoom()"
         />
+        <p v-if="erroNome" class="erro-form" role="alert">{{ erroNome }}</p>
 
         <button
-          type="button create-random-btn"
+          type="button"
           class="btn"
           @click="createQuizRoom()"
-          :disabled="createBtnClicked"
+          :disabled="estadoBotao.desabilitado"
+          :aria-describedby="estadoBotao.explicacao ? 'explicacao-criar' : null"
         >
-          {{ btnText }}
+          {{ estadoBotao.texto }}
         </button>
+        <p v-if="estadoBotao.explicacao" id="explicacao-criar" class="card-text explicacao-criar">
+          {{ estadoBotao.explicacao }}
+        </p>
+        <div v-if="falhaAoCriar" class="alert alert-danger" role="alert">
+          {{ falhaAoCriar }}
+        </div>
         <div
           class="alert alert-danger sheet-error"
           role="alert"
           v-if="sheetURLErr"
         >
-          There is a problem with the URL to your sheet. Please recheck it per
-          the instructions above, refresh this page and try again. You can reach
-          out to support@ably.com for further assistance.
+          Há um problema com o endereço da planilha. Confira as instruções
+          acima e tente de novo.
         </div>
       </div>
       <div v-else class="card-body">
-        <h2 class="card-title">Your quiz room is ready</h2>
+        <h1 class="card-title h2">Sua sala está pronta</h1>
         <p class="card-text">
-          Invite your players to join by sharing this link
+          Convide as equipes compartilhando este link
         </p>
         <button type="button" class="btn" @click="copyPlayerInviteLink()">
           {{ copyBtnText }}
-          <i v-if="!copyClicked" class="far fa-copy"></i>
+          <i v-if="!copyClicked" class="far fa-copy" aria-hidden="true"></i>
         </button>
         <hr />
         <OnlinePlayers
@@ -95,7 +101,7 @@
           <div v-if="!didHostStartGame">
             <hr />
             <button type="button" class="btn" @click="startQuiz()">
-              Start the quiz
+              Começar o quiz
             </button>
           </div>
         </template>
@@ -144,8 +150,8 @@
     </div>
     <div v-if="showFinalScreen" class="quizEnded">
       <div class="text-white end-msg">
-        <h6>The quiz has ended</h6>
-        <h1 class="display-4">Congratulations to the winners 🎉🎉🎉</h1>
+        <p class="h6">O quiz terminou</p>
+        <h1 class="display-4">Parabéns às equipes vencedoras 🎉🎉🎉</h1>
       </div>
       <Leaderboard
         :leaderboard="leaderboard"
@@ -164,10 +170,17 @@ import LiveStats from '../common/LiveStats.vue';
 import Leaderboard from '../common/Leaderboard.vue';
 import GSheetReader from 'g-sheets-api';
 import { markRaw } from 'vue';
+import {
+  PRAZO_DA_SALA_MS,
+  TEXTO_SALA_NAO_FICOU_PRONTA,
+  TEXTO_SEM_NOME,
+  estadoDoBotaoCriar,
+  nomeDoHostValido
+} from '../../sala.js';
 
 export default {
   name: 'QuizType',
-  props: ['resetCmpFn', 'realtime', 'quizType', 'showHome'],
+  props: ['realtime', 'quizType', 'showHome', 'tempoRealDesligado'],
   components: {
     Question,
     AdminPanel,
@@ -183,12 +196,14 @@ export default {
       myQuizRoomCh: null,
       hostAdminCh: 'a',
       hostNickname: null,
-      btnText: 'Criar meu Quiz',
-      createBtnClicked: false,
+      criando: false,
+      erroNome: null,
+      falhaAoCriar: null,
+      prazo: null,
       isRoomReady: false,
       playerLinkBase: window.location.href + 'play',
       playerLink: null,
-      copyBtnText: 'Copy shareable link',
+      copyBtnText: 'Copiar o link de convite',
       copyClicked: false,
       onlinePlayersArr: [],
       didHostStartGame: false,
@@ -214,22 +229,34 @@ export default {
       showFinalScreen: false
     };
   },
+  computed: {
+    estadoBotao() {
+      return estadoDoBotaoCriar({ tempoRealDesligado: this.tempoRealDesligado, criando: this.criando });
+    }
+  },
   methods: {
     createQuizRoom() {
-      this.createBtnClicked = true;
-      if (this.quizType === 'RandomQuiz') {
-        this.btnText = 'Creating your quiz room...';
-      } else {
-        this.btnText = 'Loading your questions and creating your quiz room...';
-        let mySheetId = new RegExp('/spreadsheets/d/([a-zA-Z0-9-_]+)').exec(
-          this.sheetURL
-        )[1];
-        if (mySheetId == null || this.sheetURL == null) {
+      if (this.estadoBotao.desabilitado) {
+        return;
+      }
+      if (!nomeDoHostValido(this.hostNickname)) {
+        this.erroNome = TEXTO_SEM_NOME;
+        this.$nextTick(() => this.$refs.campoNome && this.$refs.campoNome.focus());
+        return;
+      }
+      this.erroNome = null;
+      this.falhaAoCriar = null;
+      this.sheetURLErr = false;
+      this.criando = true;
+      if (this.quizType !== 'RandomQuiz') {
+        const achado = new RegExp('/spreadsheets/d/([a-zA-Z0-9-_]+)').exec(this.sheetURL || '');
+        if (!achado) {
           this.sheetURLErr = true;
+          this.criando = false;
           return;
         }
         const options = {
-          sheetId: mySheetId,
+          sheetId: achado[1],
           sheetNumber: 1,
           returnAllResults: true
         };
@@ -241,12 +268,32 @@ export default {
           error => {
             this.sheetURLErr = true;
             console.log(error);
-            return;
           }
         );
       }
       this.waitForGameRoom();
       this.enterMainThread();
+      this.iniciarPrazo();
+    },
+    /* Se o servidor não avisar que a sala está pronta no prazo, explica e libera o botão. */
+    iniciarPrazo() {
+      clearTimeout(this.prazo);
+      this.prazo = setTimeout(() => this.salaNaoFicouPronta(), PRAZO_DA_SALA_MS);
+    },
+    salaNaoFicouPronta() {
+      if (this.isRoomReady) {
+        return;
+      }
+      this.criando = false;
+      this.falhaAoCriar = TEXTO_SALA_NAO_FICOU_PRONTA;
+      if (this.myQuizRoomCh) {
+        this.myQuizRoomCh.unsubscribe();
+      }
+      if (this.globalQuizCh) {
+        this.globalQuizCh.presence.leave();
+      }
+      /* A nova tentativa usa outro código, para não misturar com uma sala que nasça atrasada. */
+      this.myQuizRoomCode = this.getRandomRoomId();
     },
     waitForGameRoom() {
       this.myQuizRoomCh = markRaw(this.realtime.channels.get(
@@ -260,6 +307,8 @@ export default {
       });
     },
     handleQuizRoomReady() {
+      clearTimeout(this.prazo);
+      this.criando = false;
       this.isRoomReady = true;
       this.globalQuizCh.detach();
       this.enterGameRoomAndSubscribeToEvents();
@@ -359,10 +408,10 @@ export default {
     },
     copyPlayerInviteLink() {
       this.copyClicked = true;
-      this.copyBtnText = 'Copied!';
+      this.copyBtnText = 'Link copiado!';
       setTimeout(() => {
         this.copyClicked = false;
-        this.copyBtnText = 'Copy shareable link';
+        this.copyBtnText = 'Copiar o link de convite';
       }, 2000);
       navigator.clipboard.writeText(this.playerLink);
     },
@@ -376,6 +425,7 @@ export default {
     }
   },
   beforeUnmount() {
+    clearTimeout(this.prazo);
     if (this.myQuizRoomCh) {
       this.myQuizRoomCh.presence.leave();
     }
@@ -408,6 +458,18 @@ export default {
 .sheet-error {
   margin: 20px;
 }
+.rotulo-nome {
+  display: block;
+  margin: 16px auto 4px;
+  font-weight: bold;
+}
+.erro-form {
+  color: #b00020;
+  font-weight: bold;
+}
+.explicacao-criar {
+  margin-top: 8px;
+}
 .question-flex {
   width: 65%;
 }
@@ -428,9 +490,9 @@ button {
   margin: 5px;
   width: 60%;
   font-size: 20px;
-  background: rgba(103, 169, 133);
+  background: rgba(43, 107, 79);
   background: linear-gradient(90deg,
-      rgba(103, 169, 133, 1) 75%,
+      rgba(43, 107, 79, 1) 75%,
       rgba(1, 67, 57, 1) 100%);
   border: 1px solid #ffffff;
   color: #ffffff;
@@ -445,7 +507,7 @@ button:hover {
 .back-btn {
   background: none;
   border: none;
-  color: #ffffff;
+  color: #014339;
   padding: 0px;
   margin: 0px;
 }

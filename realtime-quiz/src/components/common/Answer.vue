@@ -4,11 +4,12 @@
       <i
         class="fas"
         :class="didAnswerCorrectly ? 'fa-check-circle' : 'fa-times-circle'"
+        aria-hidden="true"
       ></i>
       {{ evalMessage }}
     </div>
     <hr v-if="!isAdminView" />
-    <h5>The answer is</h5>
+    <h5>A resposta é</h5>
     <h2 class="card-title answer-text">{{ correctAnswer }}</h2>
   </div>
 </template>
@@ -20,7 +21,7 @@ export default {
   data() {
     return {
       evalMessage:
-        this.didAnswerCorrectly === true ? 'Correct Answer' : 'Wrong Answer',
+        this.didAnswerCorrectly === true ? 'Resposta certa' : 'Resposta errada',
       cardColorClass: null,
       viewType:
         this.isAdminView == true ? 'answer-card-host' : 'answer-card-player'

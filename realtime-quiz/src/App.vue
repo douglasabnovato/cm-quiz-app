@@ -4,7 +4,7 @@
       <p>{{ aviso.texto }}</p>
       <button v-if="aviso.grave" type="button" @click="reconectar">Tentar de novo</button>
     </div>
-    <router-view :realtime="realtime"></router-view>
+    <router-view :realtime="realtime" :tempo-real-desligado="semChave"></router-view>
   </main>
 </template>
 
