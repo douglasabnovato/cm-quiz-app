@@ -21,7 +21,7 @@ Só o host inicia, avança e encerra o quiz. Depois do início, a sala fecha par
 
 ## Estado e próximos passos (ciclo de 16/11/2026)
 
-**Critérios do MVP:** 7 de 10 aplicáveis atendidos, **finalizado: não** ([docs/MVP.md](docs/MVP.md)). O critério 8 (acessibilidade) fica parcial: o axe e o teclado cobrem as telas que abrem sem a chave do Ably, e as telas do jogo ao vivo ficam sem axe até o modo local sem Ably (#31, próximo ciclo). O resto depende do responsável: o jogo ao vivo percorrido no navegador exige a chave do Ably (#14), e o critério 9 exige ligar os alertas do Dependabot (#32).
+**Critérios do MVP:** 8 de 10 aplicáveis atendidos, **finalizado: não** ([docs/MVP.md](docs/MVP.md)). O critério 8 (acessibilidade) fica parcial: o axe e o teclado cobrem as telas que abrem sem a chave do Ably, e as telas do jogo ao vivo ficam sem axe até o modo local sem Ably (#31, próximo ciclo). O critério 3 depende do responsável: o jogo ao vivo percorrido no navegador exige a chave do Ably (#14). O critério 9 atende desde 16/11/2026: com os alertas do Dependabot ligados, há 0 alertas abertos e o `npm audit --omit=dev` dá 0.
 
 **O que foi feito**
 - 16/11/2026, [PR #30](https://github.com/douglasabnovato/cm-quiz-app/pull/30), na sprint `developer/sprint-2026-11-19` (a `main` recebe depois da revisão do responsável):
@@ -40,7 +40,7 @@ Só o host inicia, avança e encerra o quiz. Depois do início, a sala fecha par
 - [#34](https://github.com/douglasabnovato/cm-quiz-app/issues/34) Reduzir o peso das imagens do cabeçalho.
 - [#33](https://github.com/douglasabnovato/cm-quiz-app/issues/33) Gerar o front no deploy, sem versionar o `dist`.
 - [#35](https://github.com/douglasabnovato/cm-quiz-app/issues/35) Atualizar o servidor para Express 5 e Ably 2.
-- [#16](https://github.com/douglasabnovato/cm-quiz-app/issues/16) e [#32](https://github.com/douglasabnovato/cm-quiz-app/issues/32): publicar no Render, ligar o Dependabot e exigir o `e2e` na `main` (responsável).
+- [#16](https://github.com/douglasabnovato/cm-quiz-app/issues/16) e [#32](https://github.com/douglasabnovato/cm-quiz-app/issues/32): publicar no Render e exigir o `e2e` na `main` (responsável).
 
 **Onde está a documentação**
 - [docs/MVP.md](docs/MVP.md): critérios, evidências e hipótese.
