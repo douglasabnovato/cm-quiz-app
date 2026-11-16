@@ -20,10 +20,10 @@
 
 ```sh
 npm ci
-npm test                         # 16 testes
+npm test                         # 17 testes
 npm run lint
 npx playwright install chromium
-npm run test:e2e                 # 9 testes no navegador, sem chave
+npm run test:e2e                 # 10 testes no navegador, sem chave
 cd realtime-quiz && npm ci && npm run lint && npm run build && cd ..
 git status --short realtime-quiz/dist   # vazio: o dist versionado está em dia
 npm start                        # http://localhost:8082

@@ -21,7 +21,7 @@ Só o host inicia, avança e encerra o quiz. Depois do início, a sala fecha par
 
 ## Estado e próximos passos (ciclo de 16/11/2026)
 
-**Critérios do MVP:** 9 de 10 aplicáveis atendidos, **finalizado: sim** ([docs/MVP.md](docs/MVP.md)). O que falta (jogo ao vivo percorrido) depende da chave do Ably, que é do responsável.
+**Critérios do MVP:** 9 de 10 aplicáveis atendidos, **finalizado: sim** ([docs/MVP.md](docs/MVP.md)). O que falta (jogo ao vivo percorrido no navegador) depende da chave do Ably, que só o responsável cria; a #31 propõe um modo local sem Ably.
 
 **O que foi feito**
 - 16/11/2026, [PR #30](https://github.com/douglasabnovato/cm-quiz-app/pull/30), na sprint `developer/sprint-2026-11-19` (a `main` recebe depois da revisão do responsável):
