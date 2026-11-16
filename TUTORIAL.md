@@ -840,4 +840,4 @@ This component displays the correct answer for the previously displayed question
 
 That's all the code! All the components are extensible and can be used as a starting point to customize the app as per your requirements.
 
-If you have any questions, feel free to [give me a shout on Twitter](https://twitter.com/Srushtika) or [reach out to the support team at Ably](mailto:support@ably.io).
+Texto original do *realtime-quiz-framework* (Ably, Apache-2.0). Para rodar este projeto, veja o [README](README.md).
