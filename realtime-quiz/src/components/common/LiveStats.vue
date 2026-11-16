@@ -1,9 +1,9 @@
 <template>
   <div class="card text-white bg-dark mb-3 livestats-div">
-    <div class="card-header">Live stats</div>
+    <div class="card-header">Ao vivo</div>
     <div class="card-body">
       <h5 class="card-title">
-        {{ numAnswered }} of {{ numPlaying }} people have answered this question
+        {{ numAnswered }} de {{ numPlaying }} equipes já responderam
       </h5>
     </div>
   </div>

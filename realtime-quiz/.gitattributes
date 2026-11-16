@@ -1,0 +1,5 @@
+# Fonte do front sempre com LF: o build no Windows fica igual ao do CI (Linux)
+* text=auto eol=lf
+*.png binary
+*.jpeg binary
+*.ico binary

@@ -1,12 +1,12 @@
 <template>
   <div class="card" :class="viewType">
-    <div class="card-header">Question {{ newQuestionNumber }}</div>
+    <div class="card-header">Pergunta {{ newQuestionNumber }}</div>
     <h2 class="question-div card-title">{{ newQuestion }}</h2>
     <div class="img-div" v-if="showImg">
       <img
         :src="questionImgLink"
         class="img-fluid q-img"
-        alt="Image for the question"
+        alt="Imagem da pergunta"
       />
     </div>
     <Answer
@@ -34,7 +34,7 @@
       </div>
       <div class="submitted-msg" v-if="answerSubmitted">
         <h5>
-          Your answer is submitted, waiting for everyone else to answer...
+          Resposta enviada. Esperando as outras equipes responderem…
         </h5>
       </div>
     </div>
@@ -42,9 +42,11 @@
       <div
         class="progress-bar progress-bar-striped progress-bar-animated bg-dark"
         role="progressbar"
+        aria-label="Tempo restante, em segundos"
         :style="{ width: (questionTimer / 30) * 100 + '%' }"
+        :aria-valuenow="questionTimer"
         aria-valuemin="0"
-        aria-valuemax="100"
+        aria-valuemax="30"
       >
         {{ questionTimer }}
       </div>

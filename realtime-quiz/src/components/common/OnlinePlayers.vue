@@ -1,10 +1,10 @@
 <template>
   <div>
     <div v-if="didHostStartGame">
-      <h1>Your quiz starts in</h1>
+      <h1>O quiz começa em</h1>
       <h1 class="display-3">{{ timer }}</h1>
     </div>
-    You'll see other players as they join
+    As equipes aparecem aqui assim que entrarem
     <div class="online-players">
       <div
         v-for="player in onlinePlayersArr"
@@ -13,7 +13,7 @@
         class="player-avatar"
       >
         <figure class="figure">
-          <i class="fas fa-user-circle fa-3x"></i>
+          <i class="fas fa-user-circle fa-3x" aria-hidden="true"></i>
           <figcaption class="figure-caption">
             {{ player.nickname }}
           </figcaption>

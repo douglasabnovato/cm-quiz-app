@@ -7,18 +7,19 @@
     "start": "node server.js",
     "test": "node --test",
     "build:front": "cd realtime-quiz && npm install && npm run build",
-    "lint": "npx eslint ./realtime-quiz/**/*.vue ."
+    "lint": "eslint .",
+    "test:e2e": "playwright test"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Srushtika/live-edtech-trivia-app.git"
+    "url": "git+https://github.com/douglasabnovato/cm-quiz-app.git"
   },
   "author": "",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/Srushtika/live-edtech-trivia-app/issues"
+    "url": "https://github.com/douglasabnovato/cm-quiz-app/issues"
   },
-  "homepage": "https://github.com/Srushtika/live-edtech-trivia-app#readme",
+  "homepage": "https://github.com/douglasabnovato/cm-quiz-app#readme",
   "dependencies": {
     "ably": "^1.2.3",
     "dotenv": "^8.2.0",
@@ -26,6 +27,8 @@
     "serve-static": "^1.14.1"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
+    "@playwright/test": "^1.65.1",
     "babel-eslint": "^10.1.0",
     "eslint": "^7.11.0",
     "eslint-plugin-vue": "^7.0.1"

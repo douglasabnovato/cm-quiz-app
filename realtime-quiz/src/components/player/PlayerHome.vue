@@ -6,26 +6,42 @@
           <img src="./assets/cm-1.png" class="card-img-top" alt="5º Desafio Global do Conhecimento" />
         </a>
       </div>
-      <div v-if="!isRoomClosed" class="card-body">
-        <h5 class="card-title">Vamooo {{ myNickname }}!</h5>
+      <div v-if="conferindoSala" class="card-body" role="status">
+        <h1 class="card-title h5">Sala do quiz</h1>
+        <p class="card-text">Conferindo a sala…</p>
+      </div>
+      <div v-else-if="falhaNaSala" class="card-body">
+        <h1 class="card-title h5">Sala do quiz</h1>
+        <div class="alert alert-danger" role="alert">
+          Não foi possível conferir a sala. Confira a conexão e tente de novo.
+        </div>
+        <button type="button" class="btn" @click="conferirSala()">
+          Conferir a sala de novo
+        </button>
+      </div>
+      <div v-else-if="!isRoomClosed" class="card-body">
+        <h1 class="card-title h5">Vamooo {{ myNickname }}!</h1>
         <template v-if="!didPlayerEnterRoom">
-          <p class="card-text">Insira o nome da sua equipe para identificarmos</p>
+          <label for="nome-da-equipe" class="rotulo-nome">Nome da equipe</label>
+          <p id="ajuda-nome-da-equipe" class="card-text">Insira o nome da sua equipe para identificarmos</p>
           <div class="nickname-input">
             <input
               class="form-control host-nickname"
-              id="host-nickname"
-              placeholder="Insira o nome da sua equipe"
+              id="nome-da-equipe"
+              aria-describedby="ajuda-nome-da-equipe"
+              :aria-invalid="erroNome ? 'true' : null"
               v-model="myNickname"
               @keyup.enter="enterRoomWithNickname()"
             />
             <button
-              type="button create-random-btn"
+              type="button"
               class="btn"
               @click="enterRoomWithNickname()"
             >
               Entrar
             </button>
           </div>
+          <p v-if="erroNome" class="erro-form" role="alert">{{ erroNome }}</p>
         </template>
         <template v-else>
           <OnlinePlayers
@@ -36,23 +52,20 @@
           <div v-if="!didHostStartGame">
             <hr />
             <small class="text-muted"
-              >Waiting for your host, <strong>{{ hostNickname }}</strong
-              >, to start the quiz</small
+              >Esperando o host, <strong>{{ hostNickname }}</strong
+              >, começar o quiz</small
             >
           </div>
         </template>
       </div>
-      <div v-if="isRoomClosed" class="card-body">
-        Sorry this quiz room is no longer available to enter, either because the
-        host is no longer online or the quiz has already started.
+      <div v-else class="card-body">
+        <h1 class="card-title h5">Sala indisponível</h1>
+        <p class="card-text">
+          Esta sala não está mais disponível: o host saiu ou o quiz já começou.
+          Peça um link novo ao host.
+        </p>
       </div>
       <div class="card-footer text-muted div-black">
-        <!--<a
-          href="https://github.com/Srushtika/realtime-quiz-framework"
-          class="link"
-          target="_blank"
-          >Learn how to build your own realtime quiz app with Ably &rarr;</a
-        >-->
       </div>
     </div>
     <Question
@@ -89,13 +102,13 @@
     </div>
     <template v-if="didHostForceQuizEnd">
       <div class="alert alert-danger alert-quiz-ended" role="alert">
-        This quiz has ended <br />Either the host has ended it or they have
-        simply left. Please request the host to share a new link.
+        Este quiz terminou. <br />O host encerrou o quiz ou saiu. Peça
+        um link novo ao host.
       </div>
     </template>
     <template v-if="showFinalScreen">
       <div class="quiz-end-player">
-        This quiz has ended
+        O quiz terminou
       </div>
       <div>
         <Leaderboard
@@ -117,9 +130,11 @@ import Leaderboard from '../common/Leaderboard.vue';
 
 import axios from 'axios';
 import { markRaw } from 'vue';
+import { nomeValido } from '../../sala.js';
 export default {
   name: 'WaitingArea',
-  props: ['realtime'],
+  /* tempoRealDesligado vem do App para todas as rotas; declarada para não virar atributo no HTML. */
+  props: ['realtime', 'tempoRealDesligado'],
   components: {
     Question,
     Answer,
@@ -130,6 +145,9 @@ export default {
   data() {
     return {
       isRoomClosed: null,
+      conferindoSala: true,
+      falhaNaSala: false,
+      erroNome: null,
       quizRoomCode: null,
       myQuizRoomCh: null,
       myInputCh: null,
@@ -249,7 +267,28 @@ export default {
         this.realtime.connection.once('connected', ligar);
       }
     },
+    /* Pergunta ao servidor se a sala aceita equipes; falha de rede vira aviso com nova tentativa. */
+    conferirSala() {
+      this.conferindoSala = true;
+      this.falhaNaSala = false;
+      return axios
+        .get('/checkRoomStatus', { params: { quizCode: this.quizRoomCode } })
+        .then(resposta => {
+          this.isRoomClosed = resposta.data.isRoomClosed;
+        })
+        .catch(() => {
+          this.falhaNaSala = true;
+        })
+        .finally(() => {
+          this.conferindoSala = false;
+        });
+    },
     enterRoomWithNickname() {
+      if (!nomeValido(this.myNickname)) {
+        this.erroNome = 'Escreva o nome da equipe para entrar.';
+        return;
+      }
+      this.erroNome = null;
       this.myQuizRoomCh.presence.enter({
         nickname: this.myNickname,
         avatarColor: this.myAvatarColor,
@@ -286,13 +325,9 @@ export default {
       this.clickedPlayerAnswerIndex = obj.playerAnswerIndex;
     }
   },
-  async created() {
+  created() {
     this.quizRoomCode = this.$route.query.quizCode;
-    await axios
-      .get('/checkRoomStatus?quizCode=' + this.quizRoomCode)
-      .then(roomStatusInfo => {
-        this.isRoomClosed = roomStatusInfo.data.isRoomClosed;
-      });
+    this.conferirSala();
     this.myQuizRoomCh = markRaw(this.realtime.channels.get(
       `${this.quizRoomCode}:primary`
     ));
@@ -330,14 +365,24 @@ export default {
   margin: 0 auto;
 }
 
+.rotulo-nome {
+  display: block;
+  font-weight: bold;
+}
+.erro-form {
+  color: #b00020;
+  font-weight: bold;
+  margin-top: 8px;
+}
+
 .player-leaderboard {
   width: 40%;
 }
 
 button {
-  background: rgba(103, 169, 133);
+  background: rgba(43, 107, 79);
   background: linear-gradient(90deg,
-      rgba(103, 169, 133, 1) 75%,
+      rgba(43, 107, 79, 1) 75%,
       rgba(1, 67, 57, 1) 100%);
   border: 1px solid #ffffff;
   color: #ffffff;
