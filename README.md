@@ -21,7 +21,7 @@ Só o host inicia, avança e encerra o quiz. Depois do início, a sala fecha par
 
 ## Estado e próximos passos (ciclo de 16/11/2026)
 
-**Critérios do MVP:** 8 de 10 aplicáveis atendidos, **finalizado: sim** ([docs/MVP.md](docs/MVP.md)). O que falta depende do responsável: o jogo ao vivo percorrido no navegador exige a chave do Ably (#14; a #31 propõe um modo local sem Ably), e o critério 9 exige ligar os alertas do Dependabot (#32).
+**Critérios do MVP:** 7 de 10 aplicáveis atendidos, **finalizado: não** ([docs/MVP.md](docs/MVP.md)). O critério 8 (acessibilidade) fica parcial: o axe e o teclado cobrem as telas que abrem sem a chave do Ably, e as telas do jogo ao vivo ficam sem axe até o modo local sem Ably (#31, próximo ciclo). O resto depende do responsável: o jogo ao vivo percorrido no navegador exige a chave do Ably (#14), e o critério 9 exige ligar os alertas do Dependabot (#32).
 
 **O que foi feito**
 - 16/11/2026, [PR #30](https://github.com/douglasabnovato/cm-quiz-app/pull/30), na sprint `developer/sprint-2026-11-19` (a `main` recebe depois da revisão do responsável):
