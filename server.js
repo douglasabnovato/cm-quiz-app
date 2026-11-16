@@ -16,6 +16,23 @@ const GLOBAL_CHANNEL = 'main-quiz-thread';
 const DIST = path.join(__dirname, 'realtime-quiz/dist');
 const ROOM_CODE = /^[A-Za-z0-9-]{3,40}$/;
 
+/*
+ * Permissões mínimas do token do navegador (o worker usa a chave e não passa por aqui).
+ * O curinga `*` vale um segmento inteiro do nome do canal, separado por `:`.
+ * - canal global: o host só entra na presença para pedir uma sala;
+ * - `<sala>:primary`: todos assinam e entram na presença; só o servidor publica;
+ * - `<sala>:host`: o host publica os comandos (iniciar, próxima, encerrar);
+ * - `<sala>:player-ch-<clientId>`: cada jogador publica só no próprio canal de respostas.
+ */
+function capabilityDoCliente(clientId) {
+  return {
+    [GLOBAL_CHANNEL]: ['presence'],
+    '*:primary': ['subscribe', 'presence'],
+    '*:host': ['publish'],
+    [`*:player-ch-${clientId}`]: ['publish'],
+  };
+}
+
 /* Monta o app HTTP; o cliente Ably é injetado para permitir testes. */
 function createApp({ realtime, registry }) {
   const app = express();
@@ -27,7 +44,8 @@ function createApp({ realtime, registry }) {
     if (!realtime) {
       return res.status(503).json({ error: 'Tempo real desligado: o servidor está sem ABLY_API_KEY.' });
     }
-    const tokenParams = { clientId: `id-${crypto.randomUUID()}`, ttl: 60 * 60 * 1000 };
+    const clientId = `id-${crypto.randomUUID()}`;
+    const tokenParams = { clientId, ttl: 60 * 60 * 1000, capability: JSON.stringify(capabilityDoCliente(clientId)) };
     realtime.auth.createTokenRequest(tokenParams, (err, tokenRequest) => {
       if (err) {
         console.error('Falha ao gerar token do Ably:', err.message);
@@ -87,5 +105,5 @@ function main() {
 
 if (require.main === module) main();
 
-module.exports = { createApp };
+module.exports = { createApp, capabilityDoCliente };
 /* fim de server.js */

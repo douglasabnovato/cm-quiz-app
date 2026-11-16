@@ -20,6 +20,7 @@
 export default {
   name: 'AdminPanel',
   props: ['hostAdminCh', 'prevQuestionNumber'],
+  emits: ['end-quiz-now'],
   methods: {
     showNextQuestion() {
       this.hostAdminCh.publish('next-question', {

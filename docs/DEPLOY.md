@@ -4,7 +4,7 @@ Plano de ação para publicar o quiz em tempo real em hospedagem gratuita.
 
 ## 1. Desafio
 
-Publicar um quiz ao vivo (Node + worker threads + Ably + front Vue 2) sem custo, sem expor a chave do Ably e sem depender de um build de front que não roda mais nas versões atuais do Node.
+Publicar um quiz ao vivo (Node + worker threads + Ably + front Vue 3) sem custo, sem expor a chave do Ably e sem depender de um build de front que não roda mais nas versões atuais do Node.
 
 ## 2. Conteúdo
 
@@ -17,7 +17,7 @@ Publicar um quiz ao vivo (Node + worker threads + Ably + front Vue 2) sem custo,
 
 ### Decisões técnicas
 
-- **Front já buildado:** `realtime-quiz/dist` está versionado e é servido direto. O `vue-cli` 4 (webpack 4) falha no Node 17+ por causa do OpenSSL 3; recompilar exige a migração Vue 2 → Vue 3 + Vite, registrada para o próximo ciclo. As correções deste ciclo (gabarito, uma resposta por jogador, comandos só do host) estão no servidor, então o `dist` atual continua válido.
+- **Front já buildado:** `realtime-quiz/dist` está versionado e é servido direto. Desde 09/11/2026 o front é Vue 3 com Vite (#18); para recompilar, `npm run build:front` na raiz.
 - **Chave do Ably:** fica só no servidor (`ABLY_API_KEY`); o navegador recebe um token de 1 hora pelo `/auth`, com `clientId` gerado no servidor.
 - **Plano gratuito:** o serviço dorme após 15 min sem acesso (~1 min para acordar). Abra a página do host alguns minutos antes da gincana.
 

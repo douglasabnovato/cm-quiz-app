@@ -74,3 +74,50 @@
 **Este ciclo executa.** Itens 1 a 4 do backlog e a revisão do `MVP.md` pela régua N1 e pela decisão do critério 10.
 
 **Vira issue.** #17, #18, #19 (agente); #14, #15, #16 (responsável).
+
+## Ciclo de 07/11/2026
+
+> Executado em 09/11/2026. Nível N1. Sprint `developer/sprint-2026-11-12`, feature `feature/2026-11-07`.
+
+### Produto
+
+**Problema e público.** Quem organiza uma gincana escolar cria uma sala e as equipes respondem ao vivo pelo celular. Sem mudança.
+
+**Meta do ciclo.** Fechar o critério 9 (Vue 2 sem suporte e token sem restrição) e registrar o fluxo principal percorrido na tela.
+
+**O que a pesquisa trouxe.**
+- O Ably dá ao token a interseção entre a `capability` pedida e a da chave; sem `capability`, o token herda tudo. O curinga `*` vale um segmento inteiro do nome do canal, separado por `:`; por isso `*:primary` serve e `room-*` não. Fonte: [Ably, capabilities](https://ably.com/docs/auth/capabilities).
+- O Ably recomenda emitir token novo para mudar permissões, em vez de alterar as do token em uso. Fonte: [Ably FAQ, novas capacidades](https://faqs.ably.com/recommendations-for-incrementally-authorising-new-capabilities). Por isso o token já nasce com as permissões de host e jogador, sem troca no meio do jogo.
+- A migração para Vue 3 troca `new Vue` por `createApp`, `beforeDestroy`/`destroyed` por `beforeUnmount`/`unmounted` e pede `emits` declarados; o Vue Router 4 troca `mode: 'history'` por `createWebHistory`. Fontes: [guia de migração do Vue 3](https://v3-migration.vuejs.org/breaking-changes/) e [migração do Vue Router](https://router.vuejs.org/guide/migration).
+- Objetos de bibliotecas externas guardados em `data` viram proxy reativo no Vue 3; `markRaw` evita isso (mesma fonte do Vue).
+
+**Backlog do ciclo (impacto × esforço).**
+
+| # | Item | Impacto | Esforço | Situação |
+|---|---|---|---|---|
+| 1 | Token com permissões mínimas por canal (#17) | Alto | Baixo | Feito |
+| 2 | Front em Vue 3 + Vue Router 4 (#18) | Alto | Médio | Feito, a revisar |
+| 3 | Só conectar ao Ably depois de `/health` confirmar a chave | Médio | Baixo | Feito |
+| 4 | Percorrer o fluxo na tela sem chave e registrar | Médio | Baixo | Feito |
+| 5 | Teste de interface no CI (#19) | Médio | Médio | Próximo ciclo |
+
+**Fora do escopo.** Contas de usuário, redesenho das telas, Vite 6 ou mais novo (vira issue).
+
+### Engenharia
+
+**Arquitetura.** Sem mudança de desenho: `server.js` emite o token em `/auth`, agora com `capability` (`capabilityDoCliente`); o worker usa a chave. O front passa a Vue 3 (`createApp`, `createRouter`) e cria o cliente do Ably com `autoConnect: false`, ligando só depois de `/health`.
+
+**Riscos.**
+- Troca de versão maior do Vue e do Vue Router: o jogo ao vivo não foi percorrido com chave real depois da troca (#14). Item de revisão no PR.
+- `capability` restrita pode negar alguma operação que o jogo usa; conferir com chave real (#14).
+- 2 alertas de desenvolvimento no Vite 5 (servidor local); o build não leva o Vite.
+
+**Qualidade.** `npm test` (11), `npm run lint` e `npm run build` no CI; `npm audit --omit=dev` sem alertas; fluxo percorrido no navegador com axe.
+
+**Definição de pronto.** CI verde no PR para a sprint; `docs/MVP.md` e README atualizados; PR da sprint para a `main` aberto com `revisao-responsavel`.
+
+### Plano de ação
+
+**Este ciclo executa.** Itens 1 a 4.
+
+**Vira issue.** #19 (teste de interface), Vite novo, telas ainda em inglês, botão "Criar" sem chave; #14, #15, #16 seguem com o responsável.

@@ -8,7 +8,7 @@ const http = require('http');
 const { createScoreboard, normalizeCustomQuestion, POINTS_PER_CORRECT } = require('../lib/quiz-engine');
 const { createRoomRegistry, applyWorkerMessage } = require('../lib/room-registry');
 const defaultQuestions = require('../quiz-default-questions');
-const { createApp } = require('../server');
+const { createApp, capabilityDoCliente } = require('../server');
 
 test('perguntas padrão: índice correto aponta para a resposta histórica', () => {
   const [q1, q2] = defaultQuestions;
@@ -77,7 +77,7 @@ function get(app, path) {
 test('rotas: status da sala, token do Ably e erro do Ably tratado', async () => {
   const registry = createRoomRegistry();
   registry.upsert('SALA1', { totalPlayers: 1, didQuizStart: false });
-  const realtime = { auth: { createTokenRequest: (params, cb) => cb(null, { clientId: params.clientId, ttl: params.ttl }) } };
+  const realtime = { auth: { createTokenRequest: (params, cb) => cb(null, { clientId: params.clientId, ttl: params.ttl, capability: params.capability }) } };
   const app = createApp({ realtime, registry });
 
   assert.deepEqual(JSON.parse((await get(app, '/checkRoomStatus?quizCode=SALA1')).body), { isRoomClosed: false });
@@ -87,6 +87,7 @@ test('rotas: status da sala, token do Ably e erro do Ably tratado', async () => 
   const token = JSON.parse((await get(app, '/auth')).body);
   assert.match(token.clientId, /^id-[0-9a-f-]{36}$/);
   assert.equal(token.ttl, 3600000);
+  assert.deepEqual(JSON.parse(token.capability), capabilityDoCliente(token.clientId));
 
   const failing = createApp({ realtime: { auth: { createTokenRequest: (p, cb) => cb(new Error('x')) } }, registry });
   assert.equal((await get(failing, '/auth')).status, 502);
@@ -101,5 +102,14 @@ test('sem chave do Ably: telas no ar, /auth responde 503 com mensagem e /health 
   const health = JSON.parse((await get(app, '/health')).body);
   assert.equal(health.realtime, false);
   assert.equal((await get(app, '/')).status, 200);
+});
+test('token do navegador: permissões mínimas por canal', () => {
+  const cap = capabilityDoCliente('id-abc');
+  assert.deepEqual(cap['main-quiz-thread'], ['presence']);
+  assert.deepEqual(cap['*:primary'], ['subscribe', 'presence']);
+  assert.deepEqual(cap['*:host'], ['publish']);
+  assert.deepEqual(cap['*:player-ch-id-abc'], ['publish']);
+  assert.equal(Object.keys(cap).length, 4);
+  Object.values(cap).forEach((ops) => assert.ok(!ops.includes('*')));
 });
 /* fim de quiz.test.js */
