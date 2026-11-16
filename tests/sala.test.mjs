@@ -3,8 +3,10 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   estadoDoBotaoCriar,
-  nomeDoHostValido,
+  nomeValido,
   PRAZO_DA_SALA_MS,
+  TEXTO_CONFERINDO,
+  TEXTO_SALA_NAO_FICOU_PRONTA,
   TEXTO_SEM_TEMPO_REAL,
 } from '../realtime-quiz/src/sala.js';
 
@@ -27,15 +29,23 @@ test('com tempo real e parado, o botão fica ligado', () => {
   assert.deepEqual(estadoDoBotaoCriar(), { desabilitado: false, texto: 'Criar meu Quiz', explicacao: null });
 });
 
-test('nome do host: vazio, só espaços ou ausente não vale', () => {
-  assert.equal(nomeDoHostValido(''), false);
-  assert.equal(nomeDoHostValido('   '), false);
-  assert.equal(nomeDoHostValido(null), false);
-  assert.equal(nomeDoHostValido(undefined), false);
-  assert.equal(nomeDoHostValido('Equipe Azul'), true);
+test('enquanto o /health não responde, o botão espera desligado', () => {
+  assert.deepEqual(estadoDoBotaoCriar({ tempoRealDesligado: null }), {
+    desabilitado: true,
+    texto: 'Criar meu Quiz',
+    explicacao: TEXTO_CONFERINDO,
+  });
 });
 
-test('o prazo da sala é de 20 segundos', () => {
-  assert.equal(PRAZO_DA_SALA_MS, 20000);
+test('nome: vazio, só espaços ou ausente não vale', () => {
+  assert.equal(nomeValido(''), false);
+  assert.equal(nomeValido('   '), false);
+  assert.equal(nomeValido(null), false);
+  assert.equal(nomeValido(undefined), false);
+  assert.equal(nomeValido('Equipe Azul'), true);
+});
+
+test('o aviso de prazo usa o mesmo número do prazo', () => {
+  assert.ok(TEXTO_SALA_NAO_FICOU_PRONTA.includes(`${PRAZO_DA_SALA_MS / 1000} segundos`));
 });
 /* fim de sala.test.mjs */

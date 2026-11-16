@@ -20,7 +20,8 @@ export default {
     return {
       realtime: null,
       aviso: null,
-      semChave: false
+      /* null enquanto /health não responde: a tela de criar sala espera. */
+      semChave: null
     };
   },
   created() {
@@ -51,6 +52,7 @@ export default {
         })
         .catch(() => {
           /* /health fora do ar ou lento (servidor acordando): conecta mesmo assim e deixa o Ably tentar de novo. */
+          this.semChave = false;
           this.realtime.connection.connect();
         });
     },

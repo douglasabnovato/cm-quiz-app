@@ -175,7 +175,7 @@ import {
   TEXTO_SALA_NAO_FICOU_PRONTA,
   TEXTO_SEM_NOME,
   estadoDoBotaoCriar,
-  nomeDoHostValido
+  nomeValido
 } from '../../sala.js';
 
 export default {
@@ -239,7 +239,7 @@ export default {
       if (this.estadoBotao.desabilitado) {
         return;
       }
-      if (!nomeDoHostValido(this.hostNickname)) {
+      if (!nomeValido(this.hostNickname)) {
         this.erroNome = TEXTO_SEM_NOME;
         this.$nextTick(() => this.$refs.campoNome && this.$refs.campoNome.focus());
         return;

@@ -20,6 +20,24 @@ async function semRolagemLateral(page) {
   expect(sobra).toBeLessThanOrEqual(0);
 }
 
+/* Aperta Tab até o elemento ganhar o foco (no máximo 10 vezes). */
+async function tabAte(page, alvo) {
+  for (let i = 0; i < 10; i += 1) {
+    if (await alvo.evaluate((el) => el === document.activeElement)) return;
+    await page.keyboard.press('Tab');
+  }
+  await expect(alvo).toBeFocused();
+}
+
+/* O foco precisa aparecer: contorno ou sombra (o Bootstrap usa box-shadow nos botões). */
+async function semFocoInvisivel(alvo) {
+  const estilo = await alvo.evaluate((el) => {
+    const c = getComputedStyle(el);
+    return { contorno: c.outlineStyle !== 'none' && parseFloat(c.outlineWidth) > 0, sombra: c.boxShadow !== 'none' };
+  });
+  expect(estilo.contorno || estilo.sombra).toBe(true);
+}
+
 const AVISO_SEM_CHAVE = /O jogo ao vivo está desligado/;
 
 test.describe('host', () => {
@@ -77,6 +95,28 @@ test.describe('host', () => {
     await expect(page.getByText('Escreva o nome do host para criar a sala.')).toBeVisible();
     await expect(criar).toBeEnabled();
     await expect(page.getByLabel('Nome do host')).toBeFocused();
+    await semViolacoes(page);
+  });
+
+  test('só com teclado: abrir o formulário, escrever o nome e criar, com foco visível', async ({ page }) => {
+    await page.route('**/health', (route) =>
+      route.fulfill({ json: { status: 'ok', realtime: true, rooms: 0, players: 0 } })
+    );
+    await page.goto('/');
+    const configurar = page.getByRole('button', { name: 'Configurar o Quiz Mundo CM' });
+    await expect(configurar).toBeVisible();
+    await tabAte(page, configurar);
+    await semFocoInvisivel(configurar);
+    await page.keyboard.press('Enter');
+    const nome = page.getByLabel('Nome do host');
+    await tabAte(page, nome);
+    await page.keyboard.type('Equipe Teste');
+    const criar = page.getByRole('button', { name: 'Criar meu Quiz' });
+    await expect(criar).toBeEnabled();
+    await tabAte(page, criar);
+    await semFocoInvisivel(criar);
+    await page.keyboard.press('Enter');
+    await expect(page.getByRole('button', { name: 'Criando a sala…' })).toBeDisabled();
   });
 
   test('com tempo real, a sala que não fica pronta em 20 s avisa e libera o botão', async ({ page }) => {
@@ -94,6 +134,7 @@ test.describe('host', () => {
     await expect(page.getByRole('alert').filter({ hasText: 'A sala não ficou pronta em 20 segundos' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Criar meu Quiz' })).toBeEnabled();
     await expect(page.getByLabel('Nome do host')).toBeEnabled();
+    await semViolacoes(page);
   });
 });
 
@@ -110,6 +151,10 @@ test.describe('jogador', () => {
     await page.goto('/play?quizCode=sala-teste');
     await expect(page.getByLabel('Nome da equipe')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Entrar' })).toBeVisible();
+    await semViolacoes(page);
+    await page.getByRole('button', { name: 'Entrar' }).click();
+    await expect(page.getByRole('alert').filter({ hasText: 'Escreva o nome da equipe para entrar.' })).toBeVisible();
+    await expect(page.getByLabel('Nome da equipe')).toBeVisible();
     await semViolacoes(page);
   });
 

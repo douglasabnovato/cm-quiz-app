@@ -130,9 +130,10 @@ import Leaderboard from '../common/Leaderboard.vue';
 
 import axios from 'axios';
 import { markRaw } from 'vue';
-import { nomeDoHostValido } from '../../sala.js';
+import { nomeValido } from '../../sala.js';
 export default {
   name: 'WaitingArea',
+  /* tempoRealDesligado vem do App para todas as rotas; declarada para não virar atributo no HTML. */
   props: ['realtime', 'tempoRealDesligado'],
   components: {
     Question,
@@ -283,7 +284,7 @@ export default {
         });
     },
     enterRoomWithNickname() {
-      if (!nomeDoHostValido(this.myNickname)) {
+      if (!nomeValido(this.myNickname)) {
         this.erroNome = 'Escreva o nome da equipe para entrar.';
         return;
       }
