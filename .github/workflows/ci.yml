@@ -24,6 +24,7 @@ jobs:
           cache: npm
           cache-dependency-path: package-lock.json
       - run: npm ci
+      - run: npm run lint
       - run: npm test
   realtime-quiz:
     runs-on: ubuntu-latest
@@ -40,3 +41,30 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run build
+      # O Render serve o dist versionado; o build do CI tem de bater com ele
+      - name: dist versionado em dia com o código
+        run: |
+          if [ -n "$(git status --porcelain -- dist)" ]; then
+            git status --short -- dist
+            echo "::error::realtime-quiz/dist está atrasado: rode npm run build:front e versione o dist"
+            exit 1
+          fi
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      # Sobe o server.js sem ABLY_API_KEY e testa as telas do dist com axe e teclado
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-traces
+          path: test-results/
+          retention-days: 7
