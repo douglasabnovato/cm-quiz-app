@@ -121,3 +121,57 @@
 **Este ciclo executa.** Itens 1 a 4.
 
 **Vira issue.** #19 (teste de interface), Vite novo, telas ainda em inglês, botão "Criar" sem chave; #14, #15, #16 seguem com o responsável.
+
+## Ciclo de 16/11/2026
+
+> Executado em 16/11/2026. Nível N1. Sprint `developer/sprint-2026-11-19` (criada da `main` depois do merge do PR #28), feature `feature/2026-11-16`.
+
+### Produto
+
+**Problema e público.** Quem organiza uma gincana escolar cria uma sala e as equipes respondem ao vivo pelo celular. Sem mudança.
+
+**Hipótese e meta.** Acreditamos que um host consegue abrir uma sala e receber as equipes em até 3 passos, sem ajuda. Saberemos quando, com a chave do Ably configurada (#14), um teste no navegador criar a sala, 2 equipes entrarem e o placar final aparecer.
+
+**Meta do ciclo.** Pôr no CI o teste no navegador com axe (#19), que faltava para o critério 8 ser "Atende" pela régua; tratar as falhas que o percurso de 09/11 mostrou (#25 e a consulta da sala do jogador); traduzir as telas (#24).
+
+**O que a pesquisa trouxe.**
+- O Playwright recomenda o `@axe-core/playwright` dentro do próprio teste, com `withTags` para escolher as regras WCAG, e avisa que o teste automático não pega todos os problemas; o teclado segue à parte. Fonte: [Playwright, testes de acessibilidade](https://playwright.dev/docs/accessibility-testing).
+- O guia do Vue pede rótulo ligado a cada campo de formulário (`<label for>`), e diz que o `placeholder` sozinho não basta, porque some ao digitar e costuma ter pouco contraste. Também pede o idioma da página no `<html lang>`. Fonte: [Vue, acessibilidade](https://vuejs.org/guide/best-practices/accessibility).
+- O Ably descreve os estados da conexão: `disconnected` tenta de novo sozinho, `suspended` entra depois de 2 minutos sem conexão e `failed` pede ação. Enquanto não conecta, as mensagens ficam na fila; a tela precisa dizer ao host que a sala não nasceu, em vez de esperar para sempre. Fonte: [Ably, estados da conexão](https://ably.com/docs/connect/states).
+- O Vite 7 e o 8 pedem Node 20.19 ou 22.12 ou mais novo, e o `@vitejs/plugin-vue` 6 aceita do Vite 5 ao 8. Fonte: [Vite, guia de migração](https://vite.dev/guide/migration).
+
+**Backlog do ciclo (impacto × esforço).**
+
+| # | Item | Impacto | Esforço | Situação |
+|---|---|---|---|---|
+| 1 | Patch e minor das dependências de produção (`axios`, `vue-router`, `dotenv`) | Médio | Baixo | Este ciclo |
+| 2 | Critério 8 honesto: sem Playwright e axe no CI, é "Parcial" | Alto | Baixo | Este ciclo |
+| 3 | Teste no navegador com axe e teclado, job `e2e` no CI (#19) | Alto | Médio | Este ciclo |
+| 4 | Botão "Criar" sem tempo real e sala que não fica pronta (#25) | Médio | Baixo | Este ciclo |
+| 5 | Falha ao conferir a sala do jogador: aviso e nova tentativa | Médio | Baixo | Este ciclo |
+| 6 | Telas em português, `lang="pt-BR"`, `h1` e rótulos (#24) | Médio | Baixo | Este ciclo |
+| 7 | Vite novo, sem os alertas de desenvolvimento (#26) | Baixo | Médio | Este ciclo, se o build e o teste passarem |
+| 8 | README de porta de entrada (o repositório tem 5 estrelas) | Médio | Baixo | Este ciclo |
+| 9 | Modo local sem Ably para testar o jogo completo no CI | Alto | Alto | Vira issue |
+| 10 | Token por papel e por sala (#23) | Médio | Médio | Segue na issue |
+
+**Fora do escopo.** Contas de usuário, redesenho das telas, Ably 2 e Express 5 (troca de versão maior no servidor).
+
+### Engenharia
+
+**Arquitetura.** Sem mudança de desenho. O `App.vue` passa o estado "tempo real desligado" às telas. O `CreateQuizRoom.vue` usa uma regra pura (`realtime-quiz/src/sala.js`) para o estado do botão e um prazo de 20 s para a sala ficar pronta. O `PlayerHome.vue` trata a falha de `/checkRoomStatus`. O Playwright sobe o `server.js` sem chave e testa o `dist` versionado; o CI confere que o `dist` bate com o código.
+
+**Riscos.**
+- O `dist` é versionado e o Render não roda o build do front: esquecer de recompilar publica tela velha. Mitigação: passo no CI que compara o build com o `dist`.
+- O jogo ao vivo segue sem teste com chave real (#14). As telas novas de erro da sala só são testadas sem chave.
+- Troca de versão maior do Vite (dev): conferir build, lint e o teste no navegador.
+
+**Qualidade.** `npm test` (regras e rotas), `npm run test:e2e` (navegador, axe WCAG 2.1 A/AA e boas práticas, teclado, 375 px), `npm run lint` e `npm run build` no CI. O app não tem tema escuro próprio (nenhum `prefers-color-scheme`): o axe roda só no tema claro.
+
+**Definição de pronto.** CI verde no PR para a sprint, com o job `e2e`; revisão independente feita; `docs/MVP.md`, README e `docs/DEPLOY.md` atualizados; PR da sprint para a `main` aberto com `revisao-responsavel`.
+
+### Plano de ação
+
+**Este ciclo executa.** Itens 1 a 8.
+
+**Vira issue.** Modo local sem Ably (item 9) e o teste do jogo completo com chave no CI. Seguem com o responsável: #14 (chave do Ably) e #16 (publicação no Render).
