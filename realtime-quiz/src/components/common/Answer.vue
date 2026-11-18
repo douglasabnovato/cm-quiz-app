@@ -10,7 +10,8 @@
     </div>
     <hr v-if="!isAdminView" />
     <p class="h5">A resposta é</p>
-    <h1 class="card-title answer-text h2">{{ correctAnswer }}</h1>
+    <!-- No host, a resposta fica dentro da pergunta (h1): aqui ela é h2. -->
+    <component :is="isAdminView ? 'h2' : 'h1'" class="card-title answer-text h2">{{ correctAnswer }}</component>
   </div>
 </template>
 

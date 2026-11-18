@@ -51,8 +51,12 @@ export function criarClienteLocal(transporte, { autoConnect = true } = {}) {
 
   function aoEvento(evento) {
     if (evento.tipo === 'conectado') {
+      const reconexao = cliente.auth.clientId !== null;
       cliente.auth.clientId = evento.clientId;
       liberar();
+      /* Na reconexão a central não lembra a conexão antiga: os canais com ouvintes se anexam de novo.
+         A presença não volta sozinha (o clientId é outro); a tela avisa a perda de conexão. */
+      if (reconexao) canais.forEach((canal) => canal.reanexar());
       mudar('connected');
       return;
     }
@@ -115,6 +119,10 @@ export function criarClienteLocal(transporte, { autoConnect = true } = {}) {
           anexar();
         },
       },
+      reanexar() {
+        anexado = false;
+        if (mensagens.length > 0 || presencas.length > 0) anexar();
+      },
       /* Evento vindo do servidor: mensagem ou mudança de presença. */
       receber(evento) {
         if (evento.tipo === 'mensagem') {
@@ -146,7 +154,8 @@ export function criarClienteLocal(transporte, { autoConnect = true } = {}) {
         ouvintesDaConexao = [];
       },
       connect() {
-        if (estado === 'connecting' || estado === 'connected') return;
+        /* Em `disconnected` o transporte já tenta de novo sozinho: não abre uma segunda conexão. */
+        if (estado === 'connecting' || estado === 'connected' || estado === 'disconnected') return;
         mudar('connecting');
         transporte.conectar(aoEvento, aoMudarEstado);
       },

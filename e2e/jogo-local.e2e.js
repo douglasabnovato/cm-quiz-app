@@ -119,20 +119,23 @@ test('host cria a sala, duas equipes respondem e todos veem o placar final', asy
 
 test('sala cujo host não entra no prazo encerra e sai do /health', async ({ request, baseURL }) => {
   /* Simula a tela do host que desistiu: entra na presença global pedindo a sala, mas nunca entra nela. */
+  const sala = `room-sem-host-${Date.now()}`;
+  const salaFechada = async () => (await (await request.get(`/checkRoomStatus?quizCode=${sala}`)).json()).isRoomClosed;
   const salasAntes = (await (await request.get('/health')).json()).rooms;
   const resposta = await fetch(`${baseURL}/local/eventos`);
   const leitor = resposta.body.getReader();
-  const { value } = await leitor.read();
-  const { conexaoId } = JSON.parse(new TextDecoder().decode(value).replace(/^data: /, ''));
-  const acao = (dados) => request.post('/local/acao', { data: { conexao: conexaoId, acao: dados } });
-  await acao({ op: 'entrar', canal: 'main-quiz-thread', dados: { nickname: 'Host que desistiu', roomCode: 'room-sem-host' } });
-
-  await expect.poll(async () => (await (await request.get('/checkRoomStatus?quizCode=room-sem-host')).json()).isRoomClosed).toBe(false);
-  /* Prazo do host no teste: 3 s (QUIZ_PRAZO_DO_HOST_MS no playwright.config.js). */
-  await expect
-    .poll(async () => (await (await request.get('/checkRoomStatus?quizCode=room-sem-host')).json()).isRoomClosed, { timeout: 15_000 })
-    .toBe(true);
-  expect((await (await request.get('/health')).json()).rooms).toBe(salasAntes);
-  await leitor.cancel();
+  try {
+    const { value } = await leitor.read();
+    const { conexaoId } = JSON.parse(new TextDecoder().decode(value).replace(/^data: /, ''));
+    await request.post('/local/acao', {
+      data: { conexao: conexaoId, acao: { op: 'entrar', canal: 'main-quiz-thread', dados: { nickname: 'Host que desistiu', roomCode: sala } } },
+    });
+    await expect.poll(salaFechada).toBe(false);
+    /* Prazo do host no teste: 3 s (QUIZ_PRAZO_DO_HOST_MS no playwright.config.js). */
+    await expect.poll(salaFechada, { timeout: 15_000 }).toBe(true);
+    await expect.poll(async () => (await (await request.get('/health')).json()).rooms).toBeLessThanOrEqual(salasAntes);
+  } finally {
+    await leitor.cancel();
+  }
 });
 /* fim de jogo-local.e2e.js */

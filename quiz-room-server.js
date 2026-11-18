@@ -114,7 +114,7 @@ function handleExistingPlayerLeft(player) {
 
 /* Publica a contagem regressiva segundo a segundo. */
 async function publishTimer(event, countDownSec) {
-  while (countDownSec > 0) {
+  while (countDownSec > 0 && !encerrando) {
     quizRoomChannel.publish(event, { countDownSec });
     await new Promise((resolve) => setTimeout(resolve, 1000));
     countDownSec -= 1;
@@ -163,7 +163,7 @@ function forceQuizEnd() {
 /* Publica a pergunta, abre respostas, espera o tempo, revela a correta e o ranking. */
 async function publishQuestion(qIndex, isLast) {
   const current = questions[qIndex];
-  if (!current) return;
+  if (!current || encerrando) return;
   scoreboard.openQuestion(qIndex);
   await quizRoomChannel.publish('new-question', {
     numAnswered: 0,

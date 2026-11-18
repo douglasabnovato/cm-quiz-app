@@ -96,6 +96,40 @@ test('as ações saem na ordem pedida, antes e depois de conectar', async () => 
   assert.deepEqual(estados, ['connecting', 'connected']);
 });
 
+test('depois de reconectar, os canais com ouvintes voltam a receber', async () => {
+  const hub = createHub();
+  let conexaoId;
+  let eventoDoTransporte;
+  let estadoDoTransporte;
+  const entrar = (clientId) => {
+    ({ conexaoId } = hub.conectar({ clientId, entregar: (evento) => eventoDoTransporte(evento) }));
+    eventoDoTransporte({ tipo: 'conectado', clientId });
+  };
+  const equipe = criarClienteLocal({
+    conectar(aoEvento, aoMudarEstado) {
+      eventoDoTransporte = aoEvento;
+      estadoDoTransporte = aoMudarEstado;
+      entrar('equipe-1');
+    },
+    executar: async (acao) => hub.executar(conexaoId, acao),
+  });
+  const recebidas = [];
+  equipe.channels.get('sala:primary').subscribe('new-question', (msg) => recebidas.push(msg.data.n));
+  await equipe.esvaziar();
+
+  /* Cai a conexão: a central esquece a antiga, e o transporte entra de novo com outro clientId. */
+  hub.desconectar(conexaoId);
+  estadoDoTransporte('disconnected');
+  equipe.connection.connect();
+  entrar('equipe-2');
+  await equipe.esvaziar();
+
+  const servidor = clienteNaCentral(hub, 'servidor');
+  await servidor.channels.get('sala:primary').publish('new-question', { n: 2 });
+  assert.deepEqual(recebidas, [2]);
+  assert.equal(equipe.auth.clientId, 'equipe-2');
+});
+
 test('a central recusa canal inválido, ação desconhecida e conexão que não existe', () => {
   const hub = createHub();
   const { conexaoId } = hub.conectar({ clientId: 'c', entregar: () => {} });
