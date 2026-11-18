@@ -9,8 +9,8 @@
       {{ evalMessage }}
     </div>
     <hr v-if="!isAdminView" />
-    <h5>A resposta é</h5>
-    <h2 class="card-title answer-text">{{ correctAnswer }}</h2>
+    <p class="h5">A resposta é</p>
+    <h1 class="card-title answer-text h2">{{ correctAnswer }}</h1>
   </div>
 </template>
 

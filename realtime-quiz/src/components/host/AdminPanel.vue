@@ -1,6 +1,6 @@
 <template>
-  <div class="alert alert-secondary admin-panel" role="alert">
-    <h4 class="alert-heading">Painel do host</h4>
+  <section class="alert alert-secondary admin-panel" aria-labelledby="painel-do-host">
+    <h2 id="painel-do-host" class="alert-heading h4">Painel do host</h2>
     <hr />
     <button
       type="button"
@@ -13,7 +13,7 @@
     <button type="button" class="btn btn-link end-btn" @click="endQuizNow()">
       Encerrar o quiz e mostrar o placar
     </button>
-  </div>
+  </section>
 </template>
 
 <script>
@@ -48,7 +48,10 @@ export default {
   margin-bottom: 20px;
 }
 
+/* Cor escura sobre o cinza do painel: o azul padrão do btn-link não chegava a 4,5:1. */
 .end-btn {
+  color: #014339;
+  text-decoration: underline;
   font-size: 12px;
   margin: 0px;
 }

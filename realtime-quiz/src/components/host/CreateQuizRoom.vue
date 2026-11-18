@@ -149,7 +149,7 @@
       </div>
     </div>
     <div v-if="showFinalScreen" class="quizEnded">
-      <div class="text-white end-msg">
+      <div class="end-msg">
         <p class="h6">O quiz terminou</p>
         <h1 class="display-4">Parabéns às equipes vencedoras 🎉🎉🎉</h1>
       </div>
@@ -481,7 +481,9 @@ export default {
   margin: 20px auto;
   font-size: 20px;
 }
+/* Texto escuro sobre o verde do fundo: o branco dava menos de 3:1. */
 .end-msg {
+  color: #1a1a1a;
   text-align: center;
   margin: 10px auto;
 }
