@@ -60,7 +60,7 @@ jobs:
           cache-dependency-path: package-lock.json
       - run: npm ci
       - run: npx playwright install --with-deps chromium
-      # Sobe o server.js sem ABLY_API_KEY e testa as telas do dist com axe e teclado
+      # Sobe dois server.js sem segredo: sem ABLY_API_KEY (telas) e no modo local (jogo completo, #31), com axe e teclado
       - run: npm run test:e2e
       - uses: actions/upload-artifact@v4
         if: failure()

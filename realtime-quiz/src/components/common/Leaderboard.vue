@@ -1,6 +1,6 @@
 <template>
-  <div class="card text-white bg-success mb-3" :class="{'leaderboard-host': !isPlayer, 'leaderboard-player': isPlayer}">
-    <div class="card-header"><h3>{{ finalScreen == false ? 'As 5 maiores pontuações' : 'Placar final'}}</h3></div>
+  <div class="card text-white placar mb-3" :class="{'leaderboard-host': !isPlayer, 'leaderboard-player': isPlayer}">
+    <div class="card-header"><h2 class="h3">{{ finalScreen == false ? 'As 5 maiores pontuações' : 'Placar final'}}</h2></div>
     <div class="card-body">
       <p class="card-text">
         <ol v-if="leaderboard" class="score-list">
@@ -31,6 +31,11 @@ export default {
 </script>
 
 <style scoped>
+/* Verde escuro: texto branco com contraste acima de 4,5:1 (o bg-success do Bootstrap dava 3,1:1). */
+.placar {
+  background-color: #1b5e20;
+}
+
 .leaderboard-host {
   width: 90%;
   text-align: center;

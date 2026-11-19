@@ -425,7 +425,8 @@ button:active {
 }
 
 .quiz-end-player {
-  color: #ffffff;
+  /* Texto escuro sobre o verde do fundo: o branco dava menos de 3:1. */
+  color: #1a1a1a;
   margin: auto;
   text-align: center;
   font-size: 2rem;

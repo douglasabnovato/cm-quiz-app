@@ -1,13 +1,54 @@
 # MVP — cm-quiz-app
 
-> Revisto em 16/11/2026 (ciclo de 16/11/2026; critério 9 revisto às 12h01, com os alertas do Dependabot ligados). **Nível: Estudo (N1).** Meta: N1. Testado no Windows com Node 24 e no CI com Node 22. Não houve teste com pessoas nem em aparelho real.
+> Revisto em 18/11/2026 (ciclo de 18/11/2026, PR #43). **Nível: Estudo (N1).** Meta: N1. Testado no Windows com Node 22 e no CI com Node 22. Não houve teste com pessoas nem em aparelho real.
 
-**Resumo:** 8 de 10 aplicáveis atendidos
-**Finalizado:** não
+**Resumo:** 10 de 10 aplicáveis atendidos
+**Finalizado:** sim — com uma ressalva para o responsável decidir: o jogo completo é testado no **modo local** (sem Ably). O percurso com a chave real do Ably segue com o responsável (#14). A publicação (#16) e o `e2e` obrigatório na `main` (#32) também são dele.
 
-Régua N1: os critérios 5 e 7 são "Não se aplica (N1)" e saem do denominador. Antes deste ciclo, o resumo dizia 9 de 10, mas o critério 8 estava "Atende" sem Playwright nem axe no CI, que a régua exige; a contagem honesta era **8 de 10**. Revisto de novo em 16/11: o critério 8 passou a "Parcial", porque as telas do jogo ao vivo não têm axe; o resumo caiu para **7 de 10**. Por isso o MVP não está finalizado: o critério 8 depende do modo local (#31), que um agente pode fazer no próximo ciclo. O outro parcial depende do responsável e tem issue com `depende-do-responsavel`: o 3 (#14). Ainda em 16/11, o responsável ligou os alertas do Dependabot; a leitura deu 0 alertas abertos e o critério 9 passou a "Atende" (8 de 10). O ciclo ainda não está na `main`: o PR da sprint para a `main` espera a revisão do responsável.
+Régua N1: os critérios 5 e 7 são "Não se aplica (N1)" e saem do denominador. Antes deste ciclo: 8 de 10. Os critérios 3 e 8 passam a "Atende" com o modo local (#31): com `QUIZ_TEMPO_REAL=local`, o servidor troca o Ably por uma central em memória com o mesmo contrato (canais, publicação e presença). Assim, o jogo inteiro roda no navegador e no CI, sem conta nem segredo. O caminho com o Ably não muda e não é exercitado pelo CI. Este ciclo está na `developer/sprint-2026-11-19` e ainda não foi para a `main`.
 
-Evidência do CI: run [43805272109](https://github.com/douglasabnovato/cm-quiz-app/actions/runs/43805272109) do PR #30 (commit 3f07456), em 16/11/2026, jobs `raiz`, `realtime-quiz` e `e2e` verdes.
+Evidência do CI: run [44413696149](https://github.com/douglasabnovato/cm-quiz-app/actions/runs/44413696149) do PR #43 (commit 7b2e12b), em 18/11/2026, jobs `raiz`, `realtime-quiz` e `e2e` verdes.
+
+| # | Critério | Como verificar | Situação (18/11/2026) |
+|---|---|---|---|
+| 1 | Problema e público claros | Dá para explicar em uma frase | Atende: quem organiza uma gincana cria uma sala e as equipes respondem ao vivo pelo celular (README, primeira frase). |
+| 2 | Hipótese a validar | Aposta escrita, com meta | Atende: seção "Hipótese", com meta e "saberemos quando"; ainda sem validação com pessoas. |
+| 3 | Fluxo principal completo | Teste de ponta a ponta no navegador (Playwright) no CI | Atende (modo local): `e2e/jogo-local.e2e.js`, no run 44413696149 (18/11). O host cria a sala e copia o link. Duas equipes entram pelo link e respondem às 4 perguntas, uma delas só pelo teclado. Host e equipes veem "Resposta certa" e "Resposta errada", e o placar final mostra Equipe Azul com 20 e Equipe Verde com 0. Os pedidos saem do navegador para o servidor real (SSE e POST). Ressalva: com o Ably real, o percurso ainda não foi feito (#14, responsável). |
+| 4 | Escopo enxuto | Seção "Fora do MVP" | Atende: seção "Fora do MVP". |
+| 5 | Medição de uso | Métrica coletada | Não se aplica (N1). |
+| 6 | Falhas tratadas | Testes de falha de rede, vazio e espera | Atende: sem chave, aviso com "Tentar de novo" e botão "Criar" desligado com o motivo. A sala que não fica pronta em 20 s avisa e libera o botão. A falha de rede ao conferir a sala da equipe avisa e deixa tentar de novo. Nome vazio pede o nome. Conexão perdida e suspensa avisam. `/auth` responde 503 sem chave e 502 se o Ably falha. Novo em 18/11: a sala cujo host não entra em 60 s encerra e sai do `/health` (#36), com teste `node:test` e no navegador. Comandos em 18/11: `npm test` (26 de 26) e `npm run test:e2e` (12 de 12), local e no run 44413696149. |
+| 7 | Desempenho aceitável | LCP até 2,5 s no celular | Não se aplica (N1). |
+| 8 | Acessibilidade básica | axe e teclado no navegador | Atende: `npm run test:e2e` em 18/11 (12 de 12, local e no run 44413696149). O axe (WCAG 2.1 A e AA e boas práticas) não acha violações, em largura de desktop, nas telas sem a chave e também nas telas do jogo ao vivo (modo local): sala com equipes, pergunta, resposta da equipe certa e da errada, placar e painel do host, e o fim do quiz para o host e as duas equipes. O axe achou, e este ciclo corrigiu: pergunta e resposta sem `h1`, `h5` vazio, títulos fora de ordem, placar branco sobre `bg-success` (3,1:1), link "Encerrar o quiz" azul sobre cinza e "O quiz terminou" branco sobre o verde. Teclado: o fluxo do host (abrir o formulário, escrever o nome, criar) e uma resposta da equipe (Tab até a alternativa, Enter) são feitos só com Tab e Enter, com foco visível. Tab chega a "Tentar de novo" com contorno de 3 px. Sem rolagem lateral em 375 px. O app não tem tema escuro próprio (nenhum `prefers-color-scheme` no CSS), então o axe roda só no tema claro. Não há diálogo, por isso não há teste de Esc. |
+| 9 | Segurança e conformidade | `npm audit --omit=dev`, Dependabot, segredos, dados pessoais | Atende: `gh api "repos/douglasabnovato/cm-quiz-app/dependabot/alerts?state=open&per_page=100" --jq length` em 18/11/2026 devolveu 0. `npm audit --omit=dev` em 16/11/2026: 0 vulnerabilidades na raiz e em `realtime-quiz`; o ciclo de 18/11 não mudou dependências. Chave só no servidor (`.env`, fora do Git); token de `/auth` com permissões por canal. O modo local não tem token nem permissões e só liga com `QUIZ_TEMPO_REAL=local`: é para testes, nunca para publicar. Sem a variável, as rotas `/local/*` não existem (teste em `tests/quiz.test.js`). Imagens abertas em 16/11: só logotipos e o cartaz do evento, sem dado pessoal. |
+| 10 | Entrega confiável | CI nos PRs e principal protegida | Atende: `gh api repos/douglasabnovato/cm-quiz-app/rulesets/26932511` em 18/11: ruleset `principal-protegida` ativo, com `deletion`, `non_fast_forward`, `pull_request` e checks obrigatórios `raiz` e `realtime-quiz`. O job `e2e` ainda não é obrigatório (#32, responsável). |
+| 11 | Testes dos fluxos críticos | Testes no CI, sem `skipped` | Atende: run 44413696149 (18/11): `npm test` com `# tests 26`, `# pass 26`, `# skipped 0`; `npm run test:e2e` com `12 passed` (projetos `chromium` e `jogo-local`); lint da raiz e do front; build do front comparado com o `dist`. |
+| 12 | Documentação honesta | README com comandos conferidos | Atende: README revisto em 18/11, com o modo local e os comandos conferidos contra os dois `package.json` (`start`, `test`, `lint`, `test:e2e`, `build:front`, `build`). Sem link publicado, porque o Render responde 404 (#16). |
+
+## Hipótese
+
+Acreditamos que um host consegue abrir uma sala e receber as equipes **em até 3 passos, sem ajuda** (abrir o formulário, escrever o nome e criar a sala) e mandar o link às equipes.
+
+**Meta:** 3 de 3 pessoas que testarem criam a sala e recebem 2 equipes sem ajuda, em até 2 minutos.
+
+**Saberemos quando:** com a chave do Ably (#14) ou o modo local (#31), um teste no navegador criar a sala, 2 equipes entrarem pelo link e o placar final aparecer, e 3 pessoas repetirem o percurso sem ajuda.
+
+## Fora do MVP
+
+Banco de perguntas por usuário, ranking histórico, contas de usuário e login do host.
+
+## Neste ciclo (18/11/2026)
+
+Modo local sem Ably e teste do jogo completo no navegador, com axe nas telas ao vivo (#31). Correções de títulos e contraste achadas pelo axe. Sala sem host encerra no prazo (#36). Triagem das issues pela regra de 18/11/2026 da engenharia. PR #43, para a `developer/sprint-2026-11-19`.
+
+## Histórico
+
+- 18/11/2026: critérios 3 e 8 de "Parcial" para "Atende" com o modo local (#31). Resumo de 8 para 10 de 10; "Finalizado" passa a sim, com a ressalva do Ably real (#14).
+- 16/11/2026, 12h01: critério 9 de "Parcial" para "Atende". Antes, a API de alertas do Dependabot respondia 403 (alertas desligados, engenharia#33). Com os alertas ligados, 0 abertos e audit de produção 0. Resumo de 7 para 8 de 10.
+
+
+### Estado em 16/11/2026 (ciclo de 16/11/2026)
+
+> Resumo registrado: 8 de 10, "Finalizado: não". Neste ciclo: Teste no navegador com Playwright e axe no CI (#19), telas em português com rótulos e `h1` (#24), botão "Criar" e prazo da sala (#25), falha ao conferir a sala da equipe, Vite 7 (#26) e README novo. Detalhes em [PLANO-DE-ACAO.md](PLANO-DE-ACAO.md), seção "Ciclo de 16/11/2026".
 
 | # | Critério | Como verificar | Situação (16/11/2026) |
 |---|---|---|---|
@@ -23,26 +64,6 @@ Evidência do CI: run [43805272109](https://github.com/douglasabnovato/cm-quiz-a
 | 10 | Entrega confiável | CI nos PRs e principal protegida | Atende: `gh api repos/douglasabnovato/cm-quiz-app/rulesets` em 16/11: ruleset `principal-protegida` ativo, com `deletion`, `non_fast_forward`, `pull_request` e checks obrigatórios `raiz` e `realtime-quiz`. O job `e2e` ainda não é obrigatório (#32). |
 | 11 | Testes dos fluxos críticos | Testes no CI, sem `skipped` | Atende: run 43805272109 (16/11): `npm test` com `# tests 17`, `# pass 17`, `# skipped 0`; `npm run test:e2e` com `10 passed`; lint da raiz e do front; build do front comparado com o `dist`. |
 | 12 | Documentação honesta | README com comandos conferidos | Atende: README reescrito em 16/11, com comandos conferidos contra os dois `package.json` (`start`, `test`, `lint`, `test:e2e`, `build:front`, `build`); sem link publicado, porque o Render responde 404 (#16). |
-
-## Hipótese
-
-Acreditamos que um host consegue abrir uma sala e receber as equipes **em até 3 passos, sem ajuda** (abrir o formulário, escrever o nome e criar a sala) e mandar o link às equipes.
-
-**Meta:** 3 de 3 pessoas que testarem criam a sala e recebem 2 equipes sem ajuda, em até 2 minutos.
-
-**Saberemos quando:** com a chave do Ably (#14) ou o modo local (#31), um teste no navegador criar a sala, 2 equipes entrarem pelo link e o placar final aparecer, e 3 pessoas repetirem o percurso sem ajuda.
-
-## Fora do MVP
-
-Banco de perguntas por usuário, ranking histórico, contas de usuário e login do host.
-
-## Neste ciclo (16/11/2026)
-
-Teste no navegador com Playwright e axe no CI (#19), telas em português com rótulos e `h1` (#24), botão "Criar" e prazo da sala (#25), falha ao conferir a sala da equipe, Vite 7 (#26) e README novo. Detalhes em [PLANO-DE-ACAO.md](PLANO-DE-ACAO.md), seção "Ciclo de 16/11/2026".
-
-## Histórico
-
-- 16/11/2026, 12h01: critério 9 de "Parcial" para "Atende". Antes, a API de alertas do Dependabot respondia 403 (alertas desligados, engenharia#33). Com os alertas ligados, 0 abertos e audit de produção 0. Resumo de 7 para 8 de 10.
 
 ### Estado em 09/11/2026 (ciclo de 07/11/2026)
 

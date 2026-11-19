@@ -1,7 +1,7 @@
 <template>
   <div class="card" :class="viewType">
     <div class="card-header">Pergunta {{ newQuestionNumber }}</div>
-    <h2 class="question-div card-title">{{ newQuestion }}</h2>
+    <h1 class="question-div card-title h2">{{ newQuestion }}</h1>
     <div class="img-div" v-if="showImg">
       <img
         :src="questionImgLink"
@@ -15,7 +15,6 @@
       :isAdminView="true"
     ></Answer>
     <div class="card-body" v-if="!showAnswer">
-      <h5 class="card-title"></h5>
       <div class="choices-container" v-if="!answerSubmitted && !isAdminView">
         <button
           type="button"
@@ -33,9 +32,9 @@
         </div>
       </div>
       <div class="submitted-msg" v-if="answerSubmitted">
-        <h5>
+        <p class="h5">
           Resposta enviada. Esperando as outras equipes responderem…
-        </h5>
+        </p>
       </div>
     </div>
     <div v-if="!(isAdminView && showAnswer)" class="progress">

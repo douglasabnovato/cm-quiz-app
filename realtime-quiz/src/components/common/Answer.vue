@@ -9,8 +9,9 @@
       {{ evalMessage }}
     </div>
     <hr v-if="!isAdminView" />
-    <h5>A resposta é</h5>
-    <h2 class="card-title answer-text">{{ correctAnswer }}</h2>
+    <p class="h5">A resposta é</p>
+    <!-- No host, a resposta fica dentro da pergunta (h1): aqui ela é h2. -->
+    <component :is="isAdminView ? 'h2' : 'h1'" class="card-title answer-text h2">{{ correctAnswer }}</component>
   </div>
 </template>
 
