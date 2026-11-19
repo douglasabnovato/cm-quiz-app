@@ -12,6 +12,13 @@
 import * as Ably from 'ably';
 import { markRaw } from 'vue';
 import { avisoDaConexao } from './conexao.js';
+import { criarClienteLocal, transporteDoNavegador } from './cliente-local.js';
+
+/* O servidor em modo local (QUIZ_TEMPO_REAL=local) marca a página com esta meta; sem ela, o app usa o Ably. */
+function modoLocal() {
+  const meta = document.querySelector('meta[name="quiz-tempo-real"]');
+  return Boolean(meta && meta.content === 'local');
+}
 
 export default {
   name: 'App',
@@ -27,10 +34,11 @@ export default {
   created() {
     /* markRaw: o cliente do Ably não pode virar proxy reativo do Vue 3.
        autoConnect: false: só conecta depois de /health confirmar que o servidor tem a chave. */
-    this.realtime = markRaw(new Ably.Realtime({
-      authUrl: '/auth',
-      autoConnect: false
-    }));
+    this.realtime = markRaw(
+      modoLocal()
+        ? criarClienteLocal(transporteDoNavegador(), { autoConnect: false })
+        : new Ably.Realtime({ authUrl: '/auth', autoConnect: false })
+    );
     /* Mostra o estado da conexão: desconectado e suspenso tentam sozinhos; falha pede ação. */
     this.realtime.connection.on((mudanca) => {
       this.aviso = avisoDaConexao(mudanca.current, mudanca.reason, this.semChave);

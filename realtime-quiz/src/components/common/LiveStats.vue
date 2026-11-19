@@ -2,9 +2,9 @@
   <div class="card text-white bg-dark mb-3 livestats-div">
     <div class="card-header">Ao vivo</div>
     <div class="card-body">
-      <h5 class="card-title">
+      <p class="card-title h5">
         {{ numAnswered }} de {{ numPlaying }} equipes já responderam
-      </h5>
+      </p>
     </div>
   </div>
 </template>

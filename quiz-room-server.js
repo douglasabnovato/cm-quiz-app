@@ -6,6 +6,7 @@ const { parentPort, workerData } = require('worker_threads');
 const Ably = require('ably/promises');
 const defaultQuestions = require('./quiz-default-questions');
 const { createScoreboard, normalizeCustomQuestion } = require('./lib/quiz-engine');
+const { criarPrazoDoHost, prazoDoHostMs } = require('./lib/prazo-do-host');
 require('dotenv').config();
 
 const START_TIMER_SEC = 5;
@@ -22,16 +23,58 @@ let skipTimer = false;
 let quizRoomChannel;
 let hostAdminCh;
 
-const realtime = new Ably.Realtime({ key: process.env.ABLY_API_KEY, echoMessages: false });
+let realtime;
+let prazoDoHost;
+let encerrando = false;
 
-realtime.connection.once('connected', () => {
-  hostAdminCh = realtime.channels.get(`${roomCode}:host`);
-  quizRoomChannel = realtime.channels.get(`${roomCode}:primary`);
-  subscribeToHostEvents();
-  quizRoomChannel.presence.subscribe('enter', handleNewPlayerEntered);
-  quizRoomChannel.presence.subscribe('leave', handleExistingPlayerLeft);
-  quizRoomChannel.publish('thread-ready', { start: true });
-});
+/* Modo local (QUIZ_TEMPO_REAL=local): a worker fala com a central do processo principal pelo parentPort. */
+async function clienteDoModoLocal() {
+  const { criarClienteLocal } = await import('./realtime-quiz/src/cliente-local.js');
+  const pendentes = new Map();
+  let proximoId = 0;
+  return criarClienteLocal({
+    conectar(aoEvento) {
+      parentPort.on('message', (mensagem) => {
+        if (mensagem.localEvento) aoEvento(mensagem.localEvento);
+        if (mensagem.localResposta) {
+          const { id, resultado, erro } = mensagem.localResposta;
+          const pendente = pendentes.get(id);
+          pendentes.delete(id);
+          if (pendente) (erro ? pendente.reject(new Error(erro)) : pendente.resolve(resultado));
+        }
+      });
+      /* Depois do retorno: quem chamou ainda vai registrar o connection.once('connected'). */
+      setImmediate(() => aoEvento({ tipo: 'conectado', clientId: `servidor-${roomCode}` }));
+    },
+    executar(acao) {
+      proximoId += 1;
+      const id = proximoId;
+      return new Promise((resolve, reject) => {
+        pendentes.set(id, { resolve, reject });
+        parentPort.postMessage({ localAcao: { id, acao } });
+      });
+    },
+  });
+}
+
+async function iniciar() {
+  realtime = workerData.local
+    ? await clienteDoModoLocal()
+    : new Ably.Realtime({ key: process.env.ABLY_API_KEY, echoMessages: false });
+
+  realtime.connection.once('connected', () => {
+    hostAdminCh = realtime.channels.get(`${roomCode}:host`);
+    quizRoomChannel = realtime.channels.get(`${roomCode}:primary`);
+    subscribeToHostEvents();
+    quizRoomChannel.presence.subscribe('enter', handleNewPlayerEntered);
+    quizRoomChannel.presence.subscribe('leave', handleExistingPlayerLeft);
+    /* Host que não entra na sala no prazo: a sala encerra e sai do /health (#36). */
+    prazoDoHost = criarPrazoDoHost({ ms: prazoDoHostMs(), aoVencer: forceQuizEnd });
+    quizRoomChannel.publish('thread-ready', { start: true });
+  });
+}
+
+iniciar();
 
 /* Informa o processo principal sobre a sala. */
 function reportRoom() {
@@ -42,6 +85,7 @@ function reportRoom() {
 function handleNewPlayerEntered(player) {
   const data = player.data || {};
   const isHost = player.clientId === hostClientId;
+  if (isHost && prazoDoHost) prazoDoHost.hostEntrou();
   if (!isHost && didQuizStart) return;
   const newPlayerState = scoreboard.addPlayer(player.clientId, { nickname: data.nickname, avatarColor: data.avatarColor, isHost });
   if (isHost) {
@@ -70,7 +114,7 @@ function handleExistingPlayerLeft(player) {
 
 /* Publica a contagem regressiva segundo a segundo. */
 async function publishTimer(event, countDownSec) {
-  while (countDownSec > 0) {
+  while (countDownSec > 0 && !encerrando) {
     quizRoomChannel.publish(event, { countDownSec });
     await new Promise((resolve) => setTimeout(resolve, 1000));
     countDownSec -= 1;
@@ -119,7 +163,7 @@ function forceQuizEnd() {
 /* Publica a pergunta, abre respostas, espera o tempo, revela a correta e o ranking. */
 async function publishQuestion(qIndex, isLast) {
   const current = questions[qIndex];
-  if (!current) return;
+  if (!current || encerrando) return;
   scoreboard.openQuestion(qIndex);
   await quizRoomChannel.publish('new-question', {
     numAnswered: 0,
@@ -160,10 +204,14 @@ function updateLiveStatsForHost() {
 }
 
 /* Solta os canais, avisa o processo principal e encerra a thread. */
-function killWorkerThread() {
+async function killWorkerThread() {
+  if (encerrando) return;
+  encerrando = true;
   Object.values(playerChannels).forEach((channel) => channel.detach());
   if (hostAdminCh) hostAdminCh.detach();
   if (quizRoomChannel) quizRoomChannel.detach();
+  /* No modo local as ações saem em fila: espera a última chegar à central antes de encerrar a thread. */
+  if (realtime.esvaziar) await realtime.esvaziar();
   parentPort.postMessage({ killWorker: true, roomCode, totalPlayers: scoreboard.playingCount });
   realtime.close();
   process.exit(0);

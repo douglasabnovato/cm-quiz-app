@@ -8,7 +8,8 @@ const http = require('http');
 const { createScoreboard, normalizeCustomQuestion, POINTS_PER_CORRECT } = require('../lib/quiz-engine');
 const { createRoomRegistry, applyWorkerMessage } = require('../lib/room-registry');
 const defaultQuestions = require('../quiz-default-questions');
-const { createApp, capabilityDoCliente } = require('../server');
+const { createApp, capabilityDoCliente, META_MODO_LOCAL } = require('../server');
+const { createHub } = require('../lib/tempo-real-local');
 
 test('perguntas padrão: índice correto aponta para a resposta histórica', () => {
   const [q1, q2] = defaultQuestions;
@@ -103,6 +104,47 @@ test('sem chave do Ably: telas no ar, /auth responde 503 com mensagem e /health 
   assert.equal(health.realtime, false);
   assert.equal((await get(app, '/')).status, 200);
 });
+/* Faz um POST com JSON e devolve { status, body }. */
+function post(app, path, corpo) {
+  return new Promise((resolve, reject) => {
+    const server = app.listen(0, () => {
+      const req = http.request(
+        { port: server.address().port, path, method: 'POST', headers: { 'Content-Type': 'application/json' } },
+        (res) => {
+          let data = '';
+          res.on('data', (chunk) => (data += chunk));
+          res.on('end', () => {
+            server.close();
+            resolve({ status: res.statusCode, body: data });
+          });
+        }
+      );
+      req.on('error', reject);
+      req.end(JSON.stringify(corpo));
+    });
+  });
+}
+
+test('modo local: /health avisa o modo, a página ganha a meta e a ação exige conexão aberta', async () => {
+  const hub = createHub();
+  const app = createApp({ realtime: null, registry: createRoomRegistry(), hub });
+  const health = JSON.parse((await get(app, '/health')).body);
+  assert.equal(health.realtime, true);
+  assert.equal(health.modo, 'local');
+  assert.ok((await get(app, '/play')).body.includes(META_MODO_LOCAL));
+  assert.equal((await post(app, '/local/acao', { conexao: 'nao-existe', acao: { op: 'anexar', canal: 'x:primary' } })).status, 404);
+  const { conexaoId } = hub.conectar({ clientId: 'c', entregar: () => {} });
+  assert.equal((await post(app, '/local/acao', { conexao: conexaoId, acao: { op: 'apagar', canal: 'x:primary' } })).status, 400);
+  const membros = await post(app, '/local/acao', { conexao: conexaoId, acao: { op: 'membros', canal: 'x:primary' } });
+  assert.deepEqual(JSON.parse(membros.body), { resultado: [] });
+
+  /* Sem a central, nada disso existe e a página segue sem a meta. */
+  const semLocal = createApp({ realtime: null, registry: createRoomRegistry() });
+  assert.equal(JSON.parse((await get(semLocal, '/health')).body).modo, 'desligado');
+  assert.ok(!(await get(semLocal, '/')).body.includes(META_MODO_LOCAL));
+  assert.equal((await post(semLocal, '/local/acao', {})).status, 404);
+});
+
 test('token do navegador: permissões mínimas por canal', () => {
   const cap = capabilityDoCliente('id-abc');
   assert.deepEqual(cap['main-quiz-thread'], ['presence']);
